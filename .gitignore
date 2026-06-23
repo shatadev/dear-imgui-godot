@@ -13,3 +13,13 @@ export_presets.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# godot-imgui-rust ignores
+/addons/godot-imgui-rust/target
+/addons/godot-imgui-rust/.vscode
+/addons/godot-imgui-rust/project.godot
+/addons/godot-imgui-rust/exports
+/addons/godot-imgui-rust/webrtc
+/imgui/target
+/imgui/rust_out.js
+/imgui/rust_out.wasm
