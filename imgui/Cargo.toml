@@ -12,9 +12,11 @@ godot = { version = "0.5.3", git = "https://github.com/godot-rust/gdext", branch
     "experimental-wasm",
     "lazy-function-tables",
 ] }
+imgui = { version = "0.12", default-features = false, features = ["docking", "tables-api"] }
 
 [features]
 nothreads = ["godot/experimental-wasm-nothreads"]
+freetype = ["imgui/freetype"]
 
 [profile.dev]
 panic = "abort"
