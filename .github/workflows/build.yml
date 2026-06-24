@@ -189,7 +189,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: godot-imgui-rust-addon
+          name: godot-imgui-rust
           if-no-files-found: error
           path: |
             addons/godot-imgui-rust/godot-imgui-rust.gdextension
