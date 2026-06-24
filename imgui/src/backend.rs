@@ -44,7 +44,6 @@ pub struct ImGuiController {
 #[godot_api]
 impl INode for ImGuiController {
     fn init(base: Base<Node>) -> Self {
-        crate::api::ensure_singleton();
         Self {
             base,
             ctx: None,
@@ -107,8 +106,8 @@ impl INode for ImGuiController {
         };
         CURRENT_UI.with(|c| c.set(ui_ptr));
 
-        if let Some(mut api) = crate::api::singleton() {
-            api.emit_signal("imgui_layout", &[]);
+        if let Some(mut parent) = self.base().get_parent() {
+            parent.emit_signal("imgui_layout", &[]);
         }
 
         CURRENT_UI.with(|c| c.set(std::ptr::null_mut()));

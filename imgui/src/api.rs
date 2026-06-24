@@ -1,28 +1,12 @@
 use std::ffi::CString;
 use std::os::raw::c_char;
 
-use godot::classes::Engine;
+use godot::classes::{INode, Node};
 use godot::prelude::*;
 
 use imgui::sys;
 
-use crate::backend::is_in_frame;
-
-const SINGLETON: &str = "ImGui";
-
-pub fn ensure_singleton() {
-    let mut engine = Engine::singleton();
-    if !engine.has_singleton(SINGLETON) {
-        let obj = ImGui::new_alloc();
-        engine.register_singleton(SINGLETON, &obj);
-    }
-}
-
-pub fn singleton() -> Option<Gd<ImGui>> {
-    Engine::singleton()
-        .get_singleton(SINGLETON)
-        .and_then(|o| o.try_cast::<ImGui>().ok())
-}
+use crate::backend::{is_in_frame, ImGuiController};
 
 fn cstr(s: &GString) -> CString {
     CString::new(s.to_string()).unwrap_or_default()
@@ -33,13 +17,25 @@ fn vec2(x: f32, y: f32) -> sys::ImVec2 {
 }
 
 #[derive(GodotClass)]
-#[class(base=Object, init)]
-pub struct ImGui {
-    base: Base<Object>,
+#[class(base=Node)]
+pub struct ImGuiApi {
+    base: Base<Node>,
 }
 
 #[godot_api]
-impl ImGui {
+impl INode for ImGuiApi {
+    fn init(base: Base<Node>) -> Self {
+        Self { base }
+    }
+
+    fn ready(&mut self) {
+        let driver = ImGuiController::new_alloc();
+        self.base_mut().add_child(&driver);
+    }
+}
+
+#[godot_api]
+impl ImGuiApi {
     #[signal]
     fn imgui_layout();
 
@@ -63,10 +59,9 @@ impl ImGui {
 
     #[func]
     fn end(&self) {
-        if !is_in_frame() {
-            return;
+        if is_in_frame() {
+            unsafe { sys::igEnd() }
         }
-        unsafe { sys::igEnd() }
     }
 
     #[func]
@@ -80,10 +75,9 @@ impl ImGui {
 
     #[func]
     fn end_child(&self) {
-        if !is_in_frame() {
-            return;
+        if is_in_frame() {
+            unsafe { sys::igEndChild() }
         }
-        unsafe { sys::igEndChild() }
     }
 
     #[func]
@@ -159,9 +153,7 @@ impl ImGui {
         }
         let c = cstr(&label);
         let mut v = value;
-        unsafe {
-            sys::igSliderFloat(c.as_ptr(), &mut v as *mut f32, min, max, c"%.3f".as_ptr(), 0)
-        };
+        unsafe { sys::igSliderFloat(c.as_ptr(), &mut v as *mut f32, min, max, c"%.3f".as_ptr(), 0) };
         v
     }
 
@@ -287,9 +279,7 @@ impl ImGui {
             return false;
         }
         let c = cstr(&label);
-        unsafe {
-            sys::igMenuItem_Bool(c.as_ptr(), std::ptr::null::<c_char>(), false, true)
-        }
+        unsafe { sys::igMenuItem_Bool(c.as_ptr(), std::ptr::null::<c_char>(), false, true) }
     }
 
     #[func]
