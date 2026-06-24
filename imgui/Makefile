@@ -45,7 +45,7 @@ ensure-toolchain:
 
 native: native-debug native-release
 native-debug: | ensure-toolchain
-	$(CARGO) build
+	$(CARGO) build --features editor-docs
 native-release: | ensure-toolchain
 	$(CARGO) build --release
 

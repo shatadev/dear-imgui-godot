@@ -16,7 +16,9 @@ imgui = { version = "0.12", default-features = false, features = ["docking", "ta
 
 [features]
 nothreads = ["godot/experimental-wasm-nothreads"]
-freetype = ["imgui/freetype"]
+# Editor-only: embeds Rust doc comments into Godot's in-editor help. Enabled for
+# the debug build the editor loads, left out of release/web exports.
+editor-docs = ["godot/register-docs"]
 
 [profile.dev]
 panic = "abort"

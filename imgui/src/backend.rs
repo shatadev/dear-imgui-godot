@@ -16,6 +16,9 @@ thread_local! {
     static CURRENT_UI: Cell<*mut imgui::Ui> = const { Cell::new(std::ptr::null_mut()) };
 }
 
+/// Run a closure with the current frame's [`imgui::Ui`] to drive the full
+/// imgui-rs API from Rust. Returns `None` when called outside the `imgui_layout`
+/// signal. Use this from your own gdext node connected to that signal.
 pub fn with_ui<R>(f: impl FnOnce(&imgui::Ui) -> R) -> Option<R> {
     CURRENT_UI.with(|c| {
         let p = c.get();
