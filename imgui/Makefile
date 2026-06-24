@@ -1,17 +1,17 @@
 CRATE_NAME := godot_imgui_rust
 TARGET_DIR := ../addons/godot-imgui-rust/target
-WASM_PROFILE_DIR := $(TARGET_DIR)/wasm32-unknown-emscripten/debug
+WASM_DIR := $(TARGET_DIR)/wasm32-unknown-emscripten
 
 # Pinned toolchain — single source of truth. Bump deliberately, not via `rustup update`.
-# Latest stable for: EH default (panic=abort path), the --export=__heap_base requirement, 
+# Latest stable for: EH default (panic=abort path), the --export=__heap_base requirement,
 # and -Zbuild-std on emscripten.
 NIGHTLY := nightly-2026-06-19
 
 # PIC for the C/C++ deps. imgui-sys compiles Dear ImGui + cimgui (C++) via the cc crate.
 # The threaded wasm build must compile that C++ with -pthread so emscripten's atomics /
 # shared-memory features match the Rust objects; mismatched features fail to link.
-# These are applied per-recipe (see build-threads / build-nothreads), not globally,
-# because the threaded and nothreads passes need different values in one `make` run.
+# Applied per-recipe (see wasm-variant), not globally, because the threaded and nothreads
+# passes need different values in one `make` run.
 WASM_CC_NOTHREADS := -fPIC
 WASM_CC_THREADS   := -fPIC -pthread
 
@@ -35,9 +35,9 @@ CARGO_WASM := cargo +$(NIGHTLY)
 WASM_ARGS := -Zbuild-std=std,panic_abort --target wasm32-unknown-emscripten
 
 .PHONY: all ensure-toolchain native native-debug native-release \
-        build-threads rename-wasm build-nothreads wasm clean
+        wasm wasm-release wasm-variant clean
 
-all: native wasm
+all: native wasm wasm-release
 
 ensure-toolchain:
 	rustup toolchain install $(NIGHTLY) --profile minimal --component rust-src
@@ -49,21 +49,24 @@ native-debug: | ensure-toolchain
 native-release: | ensure-toolchain
 	$(CARGO) build --release
 
-wasm: build-nothreads
+# Build both emscripten variants (threaded + nothreads) for one cargo profile.
+# PROFILE selects the output dir; PROFILE_FLAG is the cargo flag (empty for debug).
+wasm: | native
+	$(MAKE) wasm-variant PROFILE=debug PROFILE_FLAG=
 
-build-threads: | native
+wasm-release: | native
+	$(MAKE) wasm-variant PROFILE=release PROFILE_FLAG=--release
+
+# The threaded build is renamed out of the way so the nothreads build takes the plain name.
+wasm-variant:
 	CFLAGS_wasm32_unknown_emscripten="$(WASM_CC_THREADS)" \
 	CXXFLAGS_wasm32_unknown_emscripten="$(WASM_CC_THREADS)" \
-	RUSTFLAGS="$(RUSTFLAGS_THREADS)" $(CARGO_WASM) build $(WASM_ARGS)
-
-rename-wasm: build-threads
-	mv $(WASM_PROFILE_DIR)/$(CRATE_NAME).wasm \
-	   $(WASM_PROFILE_DIR)/$(CRATE_NAME).threads.wasm
-
-build-nothreads: rename-wasm
+	RUSTFLAGS="$(RUSTFLAGS_THREADS)" $(CARGO_WASM) build $(PROFILE_FLAG) $(WASM_ARGS)
+	mv $(WASM_DIR)/$(PROFILE)/$(CRATE_NAME).wasm \
+	   $(WASM_DIR)/$(PROFILE)/$(CRATE_NAME).threads.wasm
 	CFLAGS_wasm32_unknown_emscripten="$(WASM_CC_NOTHREADS)" \
 	CXXFLAGS_wasm32_unknown_emscripten="$(WASM_CC_NOTHREADS)" \
-	RUSTFLAGS="$(RUSTFLAGS_NOTHREADS)" $(CARGO_WASM) build --features nothreads $(WASM_ARGS)
+	RUSTFLAGS="$(RUSTFLAGS_NOTHREADS)" $(CARGO_WASM) build $(PROFILE_FLAG) --features nothreads $(WASM_ARGS)
 
 clean:
 	$(CARGO_WASM) clean
