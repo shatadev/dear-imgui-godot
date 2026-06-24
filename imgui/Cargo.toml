@@ -25,3 +25,6 @@ panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[profile.editor]
+inherits = "release"

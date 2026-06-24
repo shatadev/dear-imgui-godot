@@ -34,27 +34,33 @@ CARGO := cargo +$(NIGHTLY)
 CARGO_WASM := cargo +$(NIGHTLY)
 WASM_ARGS := -Zbuild-std=std,panic_abort --target wasm32-unknown-emscripten
 
-.PHONY: all ensure-toolchain native native-debug native-release \
+.PHONY: all ensure-toolchain native native-editor native-release native-debug \
         wasm wasm-release wasm-variant clean
 
-all: native wasm wasm-release
+all: native wasm-release
 
 ensure-toolchain:
 	rustup toolchain install $(NIGHTLY) --profile minimal --component rust-src
 	rustup target add wasm32-unknown-emscripten --toolchain $(NIGHTLY)
 
-native: native-debug native-release
-native-debug: | ensure-toolchain
-	$(CARGO) build --features editor-docs
+native: native-editor native-release
+
+# Optimized (inherits release) with the in-editor API docs. 
+native-editor: | ensure-toolchain
+	$(CARGO) build --profile editor --features editor-docs
+
 native-release: | ensure-toolchain
 	$(CARGO) build --release
 
+native-debug: | ensure-toolchain
+	$(CARGO) build --features editor-docs
+
 # Build both emscripten variants (threaded + nothreads) for one cargo profile.
 # PROFILE selects the output dir; PROFILE_FLAG is the cargo flag (empty for debug).
-wasm: | native
+wasm:
 	$(MAKE) wasm-variant PROFILE=debug PROFILE_FLAG=
 
-wasm-release: | native
+wasm-release:
 	$(MAKE) wasm-variant PROFILE=release PROFILE_FLAG=--release
 
 # The threaded build is renamed out of the way so the nothreads build takes the plain name.

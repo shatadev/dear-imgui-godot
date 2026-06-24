@@ -11,6 +11,7 @@ env:
   # Keep in sync with imgui/Makefile nightly. Known working
   RUST_NIGHTLY: nightly-2026-06-19
 
+# TODO: Consider reverting to API custom instead of 4.7
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -29,18 +30,16 @@ jobs:
           workspaces: imgui -> ../addons/godot-imgui-rust/target
           key: native-linux
 
-      - name: Build debug (--features editor-docs) and release
+      - name: Build editor + release
         working-directory: imgui
-        run: |
-          make native-debug
-          make native-release
+        run: make native
 
       - uses: actions/upload-artifact@v4
         with:
           name: lib-linux-x86_64
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/target/debug/libgodot_imgui_rust.so
+            addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.so
             addons/godot-imgui-rust/target/release/libgodot_imgui_rust.so
 
   windows:
@@ -65,11 +64,11 @@ jobs:
 
       # Direct cargo (make isn't reliably present on Windows runners). MSVC cl.exe
       # (preinstalled) is found automatically by the cc crate for the imgui C++ build.
-      - name: Build debug (--features editor-docs) and release
+      - name: Build editor + release
         working-directory: imgui
         shell: pwsh
         run: |
-          cargo +$env:RUST_NIGHTLY build --features editor-docs
+          cargo +$env:RUST_NIGHTLY build --profile editor --features editor-docs
           cargo +$env:RUST_NIGHTLY build --release
 
       - uses: actions/upload-artifact@v4
@@ -77,7 +76,7 @@ jobs:
           name: lib-windows-x86_64
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/target/debug/godot_imgui_rust.dll
+            addons/godot-imgui-rust/target/editor/godot_imgui_rust.dll
             addons/godot-imgui-rust/target/release/godot_imgui_rust.dll
 
   macos:
@@ -96,19 +95,19 @@ jobs:
           workspaces: imgui -> ../addons/godot-imgui-rust/target
           key: native-macos
 
-      - name: Build universal debug + release
+      - name: Build universal editor + release
         working-directory: imgui
         shell: bash
         run: |
           set -euo pipefail
           # cargo --target writes to target/<triple>/ only; create the bare dirs lipo writes into.
-          mkdir -p ../addons/godot-imgui-rust/target/debug ../addons/godot-imgui-rust/target/release
-          # debug (--features editor-docs)
-          cargo +"$RUST_NIGHTLY" build --features editor-docs --target x86_64-apple-darwin
-          cargo +"$RUST_NIGHTLY" build --features editor-docs --target aarch64-apple-darwin
-          lipo -create -output ../addons/godot-imgui-rust/target/debug/libgodot_imgui_rust.dylib \
-            ../addons/godot-imgui-rust/target/x86_64-apple-darwin/debug/libgodot_imgui_rust.dylib \
-            ../addons/godot-imgui-rust/target/aarch64-apple-darwin/debug/libgodot_imgui_rust.dylib
+          mkdir -p ../addons/godot-imgui-rust/target/editor ../addons/godot-imgui-rust/target/release
+          # editor (release-optimized + editor-docs)
+          cargo +"$RUST_NIGHTLY" build --profile editor --features editor-docs --target x86_64-apple-darwin
+          cargo +"$RUST_NIGHTLY" build --profile editor --features editor-docs --target aarch64-apple-darwin
+          lipo -create -output ../addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.dylib \
+            ../addons/godot-imgui-rust/target/x86_64-apple-darwin/editor/libgodot_imgui_rust.dylib \
+            ../addons/godot-imgui-rust/target/aarch64-apple-darwin/editor/libgodot_imgui_rust.dylib
           # release
           cargo +"$RUST_NIGHTLY" build --release --target x86_64-apple-darwin
           cargo +"$RUST_NIGHTLY" build --release --target aarch64-apple-darwin
@@ -122,7 +121,7 @@ jobs:
           name: lib-macos-universal
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/target/debug/libgodot_imgui_rust.dylib
+            addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.dylib
             addons/godot-imgui-rust/target/release/libgodot_imgui_rust.dylib
 
   wasm:
@@ -149,17 +148,15 @@ jobs:
       - name: Sanity check toolchains
         run: emcc -v && em++ -v
 
-      - name: Build wasm (threaded + nothreads, debug + release)
+      - name: Build release wasm (threaded + nothreads)
         working-directory: imgui
-        run: make wasm wasm-release
+        run: make wasm-release
 
       - uses: actions/upload-artifact@v4
         with:
           name: lib-wasm
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/target/wasm32-unknown-emscripten/debug/godot_imgui_rust.threads.wasm
-            addons/godot-imgui-rust/target/wasm32-unknown-emscripten/debug/godot_imgui_rust.wasm
             addons/godot-imgui-rust/target/wasm32-unknown-emscripten/release/godot_imgui_rust.threads.wasm
             addons/godot-imgui-rust/target/wasm32-unknown-emscripten/release/godot_imgui_rust.wasm
 
@@ -177,14 +174,12 @@ jobs:
         run: |
           set -euo pipefail
           base=addons/godot-imgui-rust/target
-          mkdir -p "$base/debug" "$base/release" \
-                   "$base/wasm32-unknown-emscripten/debug" "$base/wasm32-unknown-emscripten/release"
+          mkdir -p "$base/editor" "$base/release" "$base/wasm32-unknown-emscripten/release"
           for job in lib-linux-x86_64 lib-windows-x86_64 lib-macos-universal; do
-            cp -v "dist/$job/debug/"*   "$base/debug/"
+            cp -v "dist/$job/editor/"*  "$base/editor/"
             cp -v "dist/$job/release/"* "$base/release/"
           done
-          cp -v dist/lib-wasm/debug/*   "$base/wasm32-unknown-emscripten/debug/"
-          cp -v dist/lib-wasm/release/* "$base/wasm32-unknown-emscripten/release/"
+          cp -v dist/lib-wasm/*.wasm "$base/wasm32-unknown-emscripten/release/"
           ls -R "$base"
 
       - uses: actions/upload-artifact@v4
@@ -198,13 +193,11 @@ jobs:
             addons/godot-imgui-rust/plugin.gd
             addons/godot-imgui-rust/plugin.gd.uid
             addons/godot-imgui-rust/imgui_api.tscn
-            addons/godot-imgui-rust/target/debug/libgodot_imgui_rust.so
+            addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.so
             addons/godot-imgui-rust/target/release/libgodot_imgui_rust.so
-            addons/godot-imgui-rust/target/debug/godot_imgui_rust.dll
+            addons/godot-imgui-rust/target/editor/godot_imgui_rust.dll
             addons/godot-imgui-rust/target/release/godot_imgui_rust.dll
-            addons/godot-imgui-rust/target/debug/libgodot_imgui_rust.dylib
+            addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.dylib
             addons/godot-imgui-rust/target/release/libgodot_imgui_rust.dylib
-            addons/godot-imgui-rust/target/wasm32-unknown-emscripten/debug/godot_imgui_rust.threads.wasm
-            addons/godot-imgui-rust/target/wasm32-unknown-emscripten/debug/godot_imgui_rust.wasm
             addons/godot-imgui-rust/target/wasm32-unknown-emscripten/release/godot_imgui_rust.threads.wasm
             addons/godot-imgui-rust/target/wasm32-unknown-emscripten/release/godot_imgui_rust.wasm
