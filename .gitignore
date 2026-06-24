@@ -20,6 +20,7 @@ mono_crash.*.json
 /addons/godot-imgui-rust/project.godot
 /addons/godot-imgui-rust/exports
 /addons/godot-imgui-rust/webrtc
+/addons/godot-imgui-rust/imgui.ini
 /imgui/target
 /imgui/rust_out.js
 /imgui/rust_out.wasm
