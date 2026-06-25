@@ -11,7 +11,6 @@ env:
   # Keep in sync with imgui/Makefile nightly. Known working
   RUST_NIGHTLY: nightly-2026-06-19
 
-# TODO: Consider reverting to API custom instead of 4.7
 jobs:
   linux:
     runs-on: ubuntu-latest

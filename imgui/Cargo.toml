@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 godot = { version = "0.5.3", git = "https://github.com/godot-rust/gdext", branch = "master", features = [
-    "api-4-7",
+    "api-4-2",
     "experimental-wasm",
     "lazy-function-tables",
 ] }
