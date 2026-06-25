@@ -5,3 +5,6 @@
 /**        export-ignore
 /addons    !export-ignore
 /addons/** !export-ignore
+
+addons/dear-imgui-godot/godot-imgui-rust.csproj export-ignore
+addons/dear-imgui-godot/demo/csharp/**          export-ignore
