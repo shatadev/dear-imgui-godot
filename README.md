@@ -1,6 +1,8 @@
-# dear-imgui-godot
+<h1 align="center">dear-imgui-godot</h1>
 
-Fully-featured Dear ImGui plugin for Godot 4 with [imgui-rs](https://github.com/imgui-rs/imgui-rs) backend.
+<p align="center">
+  Fully-featured Dear ImGui plugin for Godot 4 with <a href="https://github.com/imgui-rs/imgui-rs">imgui-rs</a> backend
+</p>
 
 <p align="center">
   <a href="https://github.com/shatadev/dear-imgui-godot/actions/workflows/build.yml">
