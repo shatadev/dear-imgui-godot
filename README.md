@@ -1,5 +1,8 @@
 # dear-imgui-godot
 
+<p align="center">
+  <img src="screenshot.png" alt="editor screenshot of scene with demo window " width="1920">
+</p>
 Fully-featured Dear ImGui plugin for Godot 4 with [imgui-rs](https://github.com/imgui-rs/imgui-rs) backend.
 
 # Supports
