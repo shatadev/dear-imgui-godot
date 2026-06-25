@@ -4,7 +4,15 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+    paths:
+      - "imgui/**"
+      - "addons/**"
+      - ".github/**"
   pull_request:
+    paths:
+      - "imgui/**"
+      - "addons/**"
+      - ".github/**"
   workflow_dispatch:
 
 env:
