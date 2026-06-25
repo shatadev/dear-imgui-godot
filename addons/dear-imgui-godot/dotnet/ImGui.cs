@@ -23,7 +23,7 @@ public static class ImGui
                 _api = ((SceneTree)Engine.GetMainLoop()).Root.GetNodeOrNull("ImGui");
                 if (_api == null)
                     GD.PushError("dear-imgui-godot: the \"ImGui\" autoload is missing. " +
-                        "Enable the \"Dear ImGui (Rust)\" plugin in Project Settings > Plugins.");
+                        "Enable the \"Dear ImGui Godot\" plugin in Project Settings > Plugins.");
             }
             return _api;
         }
