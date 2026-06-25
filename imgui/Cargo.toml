@@ -8,11 +8,14 @@ crate-type = ["cdylib"]
 
 [dependencies]
 godot = { version = "0.5.3", git = "https://github.com/godot-rust/gdext", branch = "master", features = [
-    "api-4-2",
+    "api-4-3",
     "experimental-wasm",
     "lazy-function-tables",
 ] }
-imgui = { version = "0.12", default-features = false, features = ["docking", "tables-api"] }
+imgui = { version = "0.12", default-features = false, features = [
+    "docking",
+    "tables-api",
+] }
 
 [features]
 nothreads = ["godot/experimental-wasm-nothreads"]
