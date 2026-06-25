@@ -1,9 +1,19 @@
 # dear-imgui-godot
 
+Fully-featured Dear ImGui plugin for Godot 4 with [imgui-rs](https://github.com/imgui-rs/imgui-rs) backend.
+
+<p align="center">
+  <a href="https://github.com/shatadev/dear-imgui-godot/actions/workflows/build.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/shatadev/dear-imgui-godot/build.yml?style=flat-square&label=build" alt="Build Status"></a>
+  <a href="https://godotengine.org">
+    <img src="https://img.shields.io/badge/Godot-4.3%2B-478cbf?style=flat-square&logo=godot-engine&logoColor=white" alt="Godot 4.3+"></a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT"></a>
+</p>
+
 <p align="center">
   <img src="screenshot.png" alt="editor screenshot of scene with demo window " width="1920">
 </p>
-Fully-featured Dear ImGui plugin for Godot 4 with [imgui-rs](https://github.com/imgui-rs/imgui-rs) backend.
 
 # Supports
 
