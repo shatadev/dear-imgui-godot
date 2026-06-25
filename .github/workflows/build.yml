@@ -193,6 +193,11 @@ jobs:
             addons/dear-imgui-godot/plugin.gd.uid
             addons/dear-imgui-godot/imgui_api.tscn
             addons/dear-imgui-godot/dotnet/ImGui.cs
+            addons/dear-imgui-godot/demo/demo.gd
+            addons/dear-imgui-godot/demo/demo.gd.uid
+            addons/dear-imgui-godot/demo/demo.tscn
+            addons/dear-imgui-godot/demo/csharp/DemoCs.cs
+            addons/dear-imgui-godot/demo/csharp/demo_cs.tscn
             addons/dear-imgui-godot/target/editor/libdear_imgui_godot.so
             addons/dear-imgui-godot/target/release/libdear_imgui_godot.so
             addons/dear-imgui-godot/target/editor/dear_imgui_godot.dll
