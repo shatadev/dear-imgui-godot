@@ -60,7 +60,7 @@ impl INode for ImGuiController {
         if CONTROLLER_ACTIVE.swap(true, Ordering::SeqCst) {
             self.passive = true;
             godot_warn!(
-                "godot-imgui-rust: multiple ImGuiController instances detected; this one is inactive."
+                "dear-imgui-godot: multiple ImGuiController instances detected; this one is inactive."
             );
             return;
         }

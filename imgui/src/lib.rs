@@ -30,7 +30,7 @@ unsafe impl ExtensionLibrary for ImGuiExtension {
             .unwrap_or(true);
         if warn {
             godot_warn!(
-                "godot-imgui-rust: the \"Dear ImGui (Rust)\" plugin is not enabled, so the `ImGui` \
+                "dear-imgui-godot: the \"Dear ImGui (Rust)\" plugin is not enabled, so the `ImGui` \
                  autoload is missing and ImGui calls will do nothing. Enable it in \
                  Project Settings > Plugins, or set `imgui/warn_if_disabled = false` to silence this."
             );

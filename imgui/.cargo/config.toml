@@ -1,2 +1,2 @@
 [build]
-target-dir = "../addons/godot-imgui-rust/target"
+target-dir = "../addons/dear-imgui-godot/target"

@@ -1,5 +1,5 @@
-CRATE_NAME := godot_imgui_rust
-TARGET_DIR := ../addons/godot-imgui-rust/target
+CRATE_NAME := dear_imgui_godot
+TARGET_DIR := ../addons/dear-imgui-godot/target
 WASM_DIR := $(TARGET_DIR)/wasm32-unknown-emscripten
 
 # Pinned toolchain — single source of truth. Bump deliberately, not via `rustup update`.

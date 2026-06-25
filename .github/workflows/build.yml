@@ -24,10 +24,10 @@ jobs:
           components: rust-src
 
       # rust-cache does not read .cargo/config.toml. point it at the real
-      # target-dir (/addons/godot-imgui-rust/target).
+      # target-dir (/addons/dear-imgui-godot/target).
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: imgui -> ../addons/godot-imgui-rust/target
+          workspaces: imgui -> ../addons/dear-imgui-godot/target
           key: native-linux
 
       - name: Build editor + release
@@ -39,8 +39,8 @@ jobs:
           name: lib-linux-x86_64
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.so
-            addons/godot-imgui-rust/target/release/libgodot_imgui_rust.so
+            addons/dear-imgui-godot/target/editor/libdear_imgui_godot.so
+            addons/dear-imgui-godot/target/release/libdear_imgui_godot.so
 
   windows:
     runs-on: windows-latest
@@ -59,7 +59,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: imgui -> ../addons/godot-imgui-rust/target
+          workspaces: imgui -> ../addons/dear-imgui-godot/target
           key: native-windows
 
       # Direct cargo (make isn't reliably present on Windows runners). MSVC cl.exe
@@ -76,8 +76,8 @@ jobs:
           name: lib-windows-x86_64
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/target/editor/godot_imgui_rust.dll
-            addons/godot-imgui-rust/target/release/godot_imgui_rust.dll
+            addons/dear-imgui-godot/target/editor/dear_imgui_godot.dll
+            addons/dear-imgui-godot/target/release/dear_imgui_godot.dll
 
   macos:
     runs-on: macos-14
@@ -92,7 +92,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: imgui -> ../addons/godot-imgui-rust/target
+          workspaces: imgui -> ../addons/dear-imgui-godot/target
           key: native-macos
 
       - name: Build universal editor + release
@@ -101,28 +101,28 @@ jobs:
         run: |
           set -euo pipefail
           # cargo --target writes to target/<triple>/ only; create the bare dirs lipo writes into.
-          mkdir -p ../addons/godot-imgui-rust/target/editor ../addons/godot-imgui-rust/target/release
+          mkdir -p ../addons/dear-imgui-godot/target/editor ../addons/dear-imgui-godot/target/release
           # editor (release-optimized + editor-docs)
           cargo +"$RUST_NIGHTLY" build --profile editor --features editor-docs --target x86_64-apple-darwin
           cargo +"$RUST_NIGHTLY" build --profile editor --features editor-docs --target aarch64-apple-darwin
-          lipo -create -output ../addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.dylib \
-            ../addons/godot-imgui-rust/target/x86_64-apple-darwin/editor/libgodot_imgui_rust.dylib \
-            ../addons/godot-imgui-rust/target/aarch64-apple-darwin/editor/libgodot_imgui_rust.dylib
+          lipo -create -output ../addons/dear-imgui-godot/target/editor/libdear_imgui_godot.dylib \
+            ../addons/dear-imgui-godot/target/x86_64-apple-darwin/editor/libdear_imgui_godot.dylib \
+            ../addons/dear-imgui-godot/target/aarch64-apple-darwin/editor/libdear_imgui_godot.dylib
           # release
           cargo +"$RUST_NIGHTLY" build --release --target x86_64-apple-darwin
           cargo +"$RUST_NIGHTLY" build --release --target aarch64-apple-darwin
-          lipo -create -output ../addons/godot-imgui-rust/target/release/libgodot_imgui_rust.dylib \
-            ../addons/godot-imgui-rust/target/x86_64-apple-darwin/release/libgodot_imgui_rust.dylib \
-            ../addons/godot-imgui-rust/target/aarch64-apple-darwin/release/libgodot_imgui_rust.dylib
-          lipo -info ../addons/godot-imgui-rust/target/release/libgodot_imgui_rust.dylib
+          lipo -create -output ../addons/dear-imgui-godot/target/release/libdear_imgui_godot.dylib \
+            ../addons/dear-imgui-godot/target/x86_64-apple-darwin/release/libdear_imgui_godot.dylib \
+            ../addons/dear-imgui-godot/target/aarch64-apple-darwin/release/libdear_imgui_godot.dylib
+          lipo -info ../addons/dear-imgui-godot/target/release/libdear_imgui_godot.dylib
 
       - uses: actions/upload-artifact@v4
         with:
           name: lib-macos-universal
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.dylib
-            addons/godot-imgui-rust/target/release/libgodot_imgui_rust.dylib
+            addons/dear-imgui-godot/target/editor/libdear_imgui_godot.dylib
+            addons/dear-imgui-godot/target/release/libdear_imgui_godot.dylib
 
   wasm:
     runs-on: ubuntu-latest
@@ -137,7 +137,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: imgui -> ../addons/godot-imgui-rust/target
+          workspaces: imgui -> ../addons/dear-imgui-godot/target
           key: wasm
 
       - uses: mymindstorm/setup-emsdk@v14
@@ -157,8 +157,8 @@ jobs:
           name: lib-wasm
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/target/wasm32-unknown-emscripten/release/godot_imgui_rust.threads.wasm
-            addons/godot-imgui-rust/target/wasm32-unknown-emscripten/release/godot_imgui_rust.wasm
+            addons/dear-imgui-godot/target/wasm32-unknown-emscripten/release/dear_imgui_godot.threads.wasm
+            addons/dear-imgui-godot/target/wasm32-unknown-emscripten/release/dear_imgui_godot.wasm
 
   package:
     needs: [linux, windows, macos, wasm]
@@ -173,7 +173,7 @@ jobs:
       - name: Assemble addon target tree
         run: |
           set -euo pipefail
-          base=addons/godot-imgui-rust/target
+          base=addons/dear-imgui-godot/target
           mkdir -p "$base/editor" "$base/release" "$base/wasm32-unknown-emscripten/release"
           for job in lib-linux-x86_64 lib-windows-x86_64 lib-macos-universal; do
             cp -v "dist/$job/editor/"*  "$base/editor/"
@@ -184,20 +184,20 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: godot-imgui-rust
+          name: dear-imgui-godot
           if-no-files-found: error
           path: |
-            addons/godot-imgui-rust/godot-imgui-rust.gdextension
-            addons/godot-imgui-rust/godot-imgui-rust.gdextension.uid
-            addons/godot-imgui-rust/plugin.cfg
-            addons/godot-imgui-rust/plugin.gd
-            addons/godot-imgui-rust/plugin.gd.uid
-            addons/godot-imgui-rust/imgui_api.tscn
-            addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.so
-            addons/godot-imgui-rust/target/release/libgodot_imgui_rust.so
-            addons/godot-imgui-rust/target/editor/godot_imgui_rust.dll
-            addons/godot-imgui-rust/target/release/godot_imgui_rust.dll
-            addons/godot-imgui-rust/target/editor/libgodot_imgui_rust.dylib
-            addons/godot-imgui-rust/target/release/libgodot_imgui_rust.dylib
-            addons/godot-imgui-rust/target/wasm32-unknown-emscripten/release/godot_imgui_rust.threads.wasm
-            addons/godot-imgui-rust/target/wasm32-unknown-emscripten/release/godot_imgui_rust.wasm
+            addons/dear-imgui-godot/dear-imgui-godot.gdextension
+            addons/dear-imgui-godot/dear-imgui-godot.gdextension.uid
+            addons/dear-imgui-godot/plugin.cfg
+            addons/dear-imgui-godot/plugin.gd
+            addons/dear-imgui-godot/plugin.gd.uid
+            addons/dear-imgui-godot/imgui_api.tscn
+            addons/dear-imgui-godot/target/editor/libdear_imgui_godot.so
+            addons/dear-imgui-godot/target/release/libdear_imgui_godot.so
+            addons/dear-imgui-godot/target/editor/dear_imgui_godot.dll
+            addons/dear-imgui-godot/target/release/dear_imgui_godot.dll
+            addons/dear-imgui-godot/target/editor/libdear_imgui_godot.dylib
+            addons/dear-imgui-godot/target/release/libdear_imgui_godot.dylib
+            addons/dear-imgui-godot/target/wasm32-unknown-emscripten/release/dear_imgui_godot.threads.wasm
+            addons/dear-imgui-godot/target/wasm32-unknown-emscripten/release/dear_imgui_godot.wasm

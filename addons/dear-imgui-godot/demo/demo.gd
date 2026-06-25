@@ -13,7 +13,7 @@ func _on_layout() -> void:
 	ImGui.show_demo_window()
 
 	ImGui.set_next_window_size(320.0, 180.0, COND_FIRST_USE_EVER)
-	if ImGui.begin("godot-imgui-rust"):
+	if ImGui.begin("dear-imgui-godot"):
 		ImGui.text("Dear ImGui running in Godot via Rust.")
 		ImGui.separator()
 		checked = ImGui.checkbox("a checkbox", checked)

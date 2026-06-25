@@ -1,5 +1,5 @@
 [package]
-name = "godot_imgui_rust"
+name = "dear_imgui_godot"
 version = "0.1.0"
 edition = "2021"
 
