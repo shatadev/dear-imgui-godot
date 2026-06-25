@@ -37,6 +37,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c00d31b1d19317b4777ec879192d3745bd97d05262b4b19cb1dda284b9d22f19"
 
 [[package]]
+name = "dear_imgui_godot"
+version = "0.1.0"
+dependencies = [
+ "godot",
+ "imgui",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -120,14 +128,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "venial",
-]
-
-[[package]]
-name = "dear_imgui_godot"
-version = "0.1.0"
-dependencies = [
- "godot",
- "imgui",
 ]
 
 [[package]]
