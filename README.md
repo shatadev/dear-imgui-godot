@@ -5,12 +5,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/shatadev/dear-imgui-godot/actions/workflows/build.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/shatadev/dear-imgui-godot/build.yml?style=flat-square&label=Build" alt="Build Status"></a>
   <a href="https://godotengine.org">
     <img src="https://img.shields.io/badge/Godot-4.3%2B-478cbf?style=flat-square&logo=godot-engine&logoColor=white" alt="Godot 4.3+"></a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT"></a>
+    <a href="https://github.com/shatadev/dear-imgui-godot/actions/workflows/build.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/shatadev/dear-imgui-godot/build.yml?style=flat-square&label=Build" alt="Build Status"></a>
 </p>
 
 <p align="center">
@@ -136,7 +136,10 @@ No Godot binary is needed at build time. The crate uses gdext's bundled `api-4-3
 
 # Credits
 
-https://github.com/pkdawson/imgui-godot
+Dear ImGui created by ocornut
+https://github.com/ocornut/imgui/
+
+imgui-godot created by pkdawson https://github.com/pkdawson/imgui-godot
 
 Built on [imgui-rs](https://github.com/imgui-rs/imgui-rs)
 
