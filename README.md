@@ -17,6 +17,31 @@
   <img src="screenshot.png" alt="editor screenshot of scene with demo window " width="1920">
 </p>
 
+> [!CAUTION]
+> LAYOUT IS SYNCHRONOUS! Attempting to use the `await` keyword within the callback bound to `imgui_layout` will crash the session. It is highly recommended to use the [gd-promise](https://github.com/shatadev/gd-promise) addon and wrap the await with `from_signal`.
+
+Instead of:
+```gdscript
+if ImGui.begin("Window"):
+    if ImGui.button("Press", 0.0, 0.0):
+        await RenderingServer.frame_post_draw # crashes due to await
+        do_something()
+ImGui.end()
+```
+
+Do:
+
+```gdscript
+if ImGui.begin("Window"):
+    if ImGui.button("Press", 0.0, 0.0):
+        Promise.from_signal(RenderingServer.frame_post_draw).and_then(func():
+            do_something() # reached as soon as signal is emitted
+        )
+ImGui.end()
+```
+
+**Do not attempt to build UI asynchronously.**
+
 # Supports
 
 - Editor: Godot 4.3+
