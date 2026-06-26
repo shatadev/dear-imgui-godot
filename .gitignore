@@ -15,6 +15,7 @@ data_*/
 mono_crash.*.json
 
 # dear-imgui-godot ignores
+/addons/dear-imgui-godot/assets
 /addons/dear-imgui-godot/target
 /addons/dear-imgui-godot/.vscode
 /addons/dear-imgui-godot/project.godot
