@@ -189,28 +189,15 @@ jobs:
           cp -v dist/lib-wasm/*.wasm "$base/wasm32-unknown-emscripten/release/"
           ls -R "$base"
 
+      - name: Stage addon
+        run: |
+          set -euo pipefail
+          mkdir -p pkg
+          cp -r addons pkg/
+          ls -R pkg
+
       - uses: actions/upload-artifact@v4
         with:
           name: dear-imgui-godot
           if-no-files-found: error
-          path: |
-            addons/dear-imgui-godot/dear-imgui-godot.gdextension
-            addons/dear-imgui-godot/dear-imgui-godot.gdextension.uid
-            addons/dear-imgui-godot/plugin.cfg
-            addons/dear-imgui-godot/plugin.gd
-            addons/dear-imgui-godot/plugin.gd.uid
-            addons/dear-imgui-godot/imgui_api.tscn
-            addons/dear-imgui-godot/dotnet/ImGui.cs
-            addons/dear-imgui-godot/demo/demo.gd
-            addons/dear-imgui-godot/demo/demo.gd.uid
-            addons/dear-imgui-godot/demo/demo.tscn
-            addons/dear-imgui-godot/demo/csharp/DemoCs.cs
-            addons/dear-imgui-godot/demo/csharp/demo_cs.tscn
-            addons/dear-imgui-godot/target/editor/libdear_imgui_godot.so
-            addons/dear-imgui-godot/target/release/libdear_imgui_godot.so
-            addons/dear-imgui-godot/target/editor/dear_imgui_godot.dll
-            addons/dear-imgui-godot/target/release/dear_imgui_godot.dll
-            addons/dear-imgui-godot/target/editor/libdear_imgui_godot.dylib
-            addons/dear-imgui-godot/target/release/libdear_imgui_godot.dylib
-            addons/dear-imgui-godot/target/wasm32-unknown-emscripten/release/dear_imgui_godot.threads.wasm
-            addons/dear-imgui-godot/target/wasm32-unknown-emscripten/release/dear_imgui_godot.wasm
+          path: pkg
