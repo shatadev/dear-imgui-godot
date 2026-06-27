@@ -8,12 +8,20 @@ use imgui::sys;
 
 use crate::backend::{is_in_frame, ImGuiController};
 
+mod layout;
+mod text;
+mod windows;
+
 fn cstr(s: &GString) -> CString {
     CString::new(s.to_string()).unwrap_or_default()
 }
 
 fn vec2(x: f32, y: f32) -> sys::ImVec2 {
     sys::ImVec2 { x, y }
+}
+
+fn vector2_of(v: sys::ImVec2) -> Vector2 {
+    Vector2::new(v.x, v.y)
 }
 
 /// Dear ImGui for GDScript, available as the `ImGui` autoload.
@@ -387,7 +395,7 @@ impl ImGuiApi {
         }
     }
 
-    /// Show the built-in Dear ImGui demo window — a live showcase of every widget.
+    /// Show the built-in Dear ImGui demo window, a live showcase of every widget.
     #[func]
     fn show_demo_window(&self) {
         if is_in_frame() {

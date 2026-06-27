@@ -1,7 +1,7 @@
 using Godot;
 
 /// <summary>Dear ImGui for C#: a typed static wrapper over the <c>ImGui</c> autoload. Build UI inside a handler connected with <see cref="OnLayout"/>.</summary>
-public static class ImGui
+public static partial class ImGui
 {
     /// <summary>Condition: apply the setting on every call.</summary>
     public const int CondAlways = 1;
@@ -129,6 +129,6 @@ public static class ImGui
     public static void DockspaceOverMainViewport() =>
         Api.Call("dockspace_over_main_viewport");
 
-    /// <summary>Show the built-in Dear ImGui demo window — a live showcase of every widget.</summary>
+    /// <summary>Show the built-in Dear ImGui demo window, a live showcase of every widget.</summary>
     public static void ShowDemoWindow() => Api.Call("show_demo_window");
 }
