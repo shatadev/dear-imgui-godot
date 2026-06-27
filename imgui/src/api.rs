@@ -14,6 +14,7 @@ mod inputs;
 mod layout;
 mod lists;
 mod sliders;
+mod tabs;
 mod text;
 mod trees;
 mod windows;
