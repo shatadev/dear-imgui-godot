@@ -16,6 +16,7 @@ mod lists;
 mod popups;
 mod sliders;
 mod status;
+mod tables;
 mod tabs;
 mod text;
 mod trees;

@@ -38,7 +38,7 @@ checksum = "c00d31b1d19317b4777ec879192d3745bd97d05262b4b19cb1dda284b9d22f19"
 
 [[package]]
 name = "dear_imgui_godot"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "godot",
  "imgui",
