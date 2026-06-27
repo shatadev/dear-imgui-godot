@@ -13,6 +13,7 @@ mod color;
 mod inputs;
 mod layout;
 mod lists;
+mod popups;
 mod sliders;
 mod tabs;
 mod text;
