@@ -9,6 +9,7 @@ use imgui::sys;
 use crate::backend::{is_in_frame, ImGuiController};
 
 mod buttons;
+mod color;
 mod inputs;
 mod layout;
 mod lists;
