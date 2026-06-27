@@ -1,7 +1,7 @@
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use godot::classes::{INode, InputEvent, Node};
+use godot::classes::{INode, InputEvent, Node, Texture2D};
 use godot::prelude::*;
 
 use imgui::{BackendFlags, ConfigFlags, Context};
@@ -14,6 +14,22 @@ static CONTROLLER_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
     static CURRENT_UI: Cell<*mut imgui::Ui> = const { Cell::new(std::ptr::null_mut()) };
+    static CURRENT_TEXTURES: Cell<*mut TextureRegistry> = const { Cell::new(std::ptr::null_mut()) };
+}
+
+/// Register a Godot texture for use with the image widgets, returning its id.
+///
+/// Only valid during the `imgui_layout` signal, when the active controller exposes
+/// its registry; returns `0` otherwise.
+pub(crate) fn register_texture(tex: Gd<Texture2D>) -> usize {
+    CURRENT_TEXTURES.with(|c| {
+        let p = c.get();
+        if p.is_null() {
+            0
+        } else {
+            unsafe { (*p).register(tex) }
+        }
+    })
 }
 
 /// Run a closure with the current frame's [`imgui::Ui`] to drive the full
@@ -108,11 +124,14 @@ impl INode for ImGuiController {
             ctx.new_frame() as *mut imgui::Ui
         };
         CURRENT_UI.with(|c| c.set(ui_ptr));
+        let tex_ptr: *mut TextureRegistry = &mut self.textures;
+        CURRENT_TEXTURES.with(|c| c.set(tex_ptr));
 
         if let Some(mut parent) = self.base().get_parent() {
             parent.emit_signal("imgui_layout", &[]);
         }
 
+        CURRENT_TEXTURES.with(|c| c.set(std::ptr::null_mut()));
         CURRENT_UI.with(|c| c.set(std::ptr::null_mut()));
 
         let draw_data = self.ctx.as_mut().unwrap().render();
