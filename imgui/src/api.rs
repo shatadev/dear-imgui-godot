@@ -15,6 +15,7 @@ mod layout;
 mod lists;
 mod popups;
 mod sliders;
+mod state;
 mod status;
 mod tables;
 mod tabs;
@@ -41,6 +42,10 @@ fn imvec4(c: Color) -> sys::ImVec4 {
         z: c.b,
         w: c.a,
     }
+}
+
+fn color_of(v: sys::ImVec4) -> Color {
+    Color::from_rgba(v.x, v.y, v.z, v.w)
 }
 
 /// Dear ImGui for GDScript, available as the `ImGui` autoload.
