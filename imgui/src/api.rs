@@ -11,6 +11,7 @@ use crate::backend::{is_in_frame, ImGuiController};
 mod buttons;
 mod color;
 mod draw;
+mod dragdrop;
 mod images;
 mod inputs;
 mod layout;
