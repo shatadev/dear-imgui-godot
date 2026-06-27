@@ -14,6 +14,7 @@ mod layout;
 mod lists;
 mod sliders;
 mod text;
+mod trees;
 mod windows;
 
 fn cstr(s: &GString) -> CString {
