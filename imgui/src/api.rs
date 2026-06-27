@@ -10,6 +10,7 @@ use crate::backend::{is_in_frame, ImGuiController};
 
 mod buttons;
 mod color;
+mod draw;
 mod images;
 mod inputs;
 mod layout;
