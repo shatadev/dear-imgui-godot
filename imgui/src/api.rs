@@ -8,6 +8,7 @@ use imgui::sys;
 
 use crate::backend::{is_in_frame, ImGuiController};
 
+mod buttons;
 mod layout;
 mod text;
 mod windows;
@@ -22,6 +23,15 @@ fn vec2(x: f32, y: f32) -> sys::ImVec2 {
 
 fn vector2_of(v: sys::ImVec2) -> Vector2 {
     Vector2::new(v.x, v.y)
+}
+
+fn imvec4(c: Color) -> sys::ImVec4 {
+    sys::ImVec4 {
+        x: c.r,
+        y: c.g,
+        z: c.b,
+        w: c.a,
+    }
 }
 
 /// Dear ImGui for GDScript, available as the `ImGui` autoload.
