@@ -16,6 +16,7 @@ mod images;
 mod inputs;
 mod layout;
 mod lists;
+mod misc;
 mod plots;
 mod popups;
 mod sliders;
