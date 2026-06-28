@@ -7,12 +7,12 @@ on:
     paths:
       - "imgui/**"
       - "addons/**"
-      - ".github/**"
+      - ".github/workflows/**"
   pull_request:
     paths:
       - "imgui/**"
       - "addons/**"
-      - ".github/**"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 env:
