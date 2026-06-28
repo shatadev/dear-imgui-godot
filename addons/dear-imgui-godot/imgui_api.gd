@@ -1,0 +1,3 @@
+extends ImGuiApi
+
+# Autoload entry

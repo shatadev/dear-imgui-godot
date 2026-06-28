@@ -1,6 +1,6 @@
 [package]
 name = "dear_imgui_godot"
-version = "0.1.16"
+version = "0.1.17"
 edition = "2021"
 
 [lib]
@@ -16,6 +16,9 @@ imgui = { version = "0.12", default-features = false, features = [
     "docking",
     "tables-api",
 ] }
+
+[build-dependencies]
+cc = "1"
 
 [features]
 nothreads = ["godot/experimental-wasm-nothreads"]
