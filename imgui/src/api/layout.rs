@@ -53,14 +53,15 @@ impl ImGuiApi {
     #[func]
     fn begin_group(&self) {
         if is_in_frame() {
-            unsafe { sys::igBeginGroup() }
+            unsafe { sys::igBeginGroup() };
+            crate::api::guard::open("group");
         }
     }
 
     /// End the group opened by `begin_group()`.
     #[func]
     fn end_group(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("group") {
             unsafe { sys::igEndGroup() }
         }
     }
@@ -77,14 +78,15 @@ impl ImGuiApi {
     #[func]
     fn push_item_width(&self, width: f32) {
         if is_in_frame() {
-            unsafe { sys::igPushItemWidth(width) }
+            unsafe { sys::igPushItemWidth(width) };
+            crate::api::guard::open("item_width");
         }
     }
 
     /// Pop the width pushed by `push_item_width()`.
     #[func]
     fn pop_item_width(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("item_width") {
             unsafe { sys::igPopItemWidth() }
         }
     }

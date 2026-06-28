@@ -30,7 +30,9 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&label);
-        unsafe { sys::igBeginMenu(c.as_ptr(), enabled) }
+        let r = unsafe { sys::igBeginMenu(c.as_ptr(), enabled) };
+        if r { crate::api::guard::open("menu"); }
+        r
     }
 
     /// Menu item with a shortcut label, checkmark and enabled toggle. Returns `true`
@@ -57,13 +59,15 @@ impl ImGuiApi {
         if !is_in_frame() {
             return false;
         }
-        unsafe { sys::igBeginMainMenuBar() }
+        let r = unsafe { sys::igBeginMainMenuBar() };
+        if r { crate::api::guard::open("mainmenubar"); }
+        r
     }
 
     /// End the main menu bar opened by `begin_main_menu_bar()`.
     #[func]
     fn end_main_menu_bar(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("mainmenubar") {
             unsafe { sys::igEndMainMenuBar() }
         }
     }
@@ -85,7 +89,9 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&id);
-        unsafe { sys::igBeginPopup(c.as_ptr(), flags) }
+        let r = unsafe { sys::igBeginPopup(c.as_ptr(), flags) };
+        if r { crate::api::guard::open("popup"); }
+        r
     }
 
     /// Begin a modal popup if it is open. `flags` are `WINDOW_*`. Returns `true` when
@@ -96,13 +102,15 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&name);
-        unsafe { sys::igBeginPopupModal(c.as_ptr(), std::ptr::null_mut(), flags) }
+        let r = unsafe { sys::igBeginPopupModal(c.as_ptr(), std::ptr::null_mut(), flags) };
+        if r { crate::api::guard::open("popup"); }
+        r
     }
 
     /// End the popup opened by `begin_popup()` or `begin_popup_modal()`.
     #[func]
     fn end_popup(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("popup") {
             unsafe { sys::igEndPopup() }
         }
     }
@@ -128,7 +136,9 @@ impl ImGuiApi {
         } else {
             c.as_ptr()
         };
-        unsafe { sys::igBeginPopupContextItem(ptr, popup_flags) }
+        let r = unsafe { sys::igBeginPopupContextItem(ptr, popup_flags) };
+        if r { crate::api::guard::open("popup"); }
+        r
     }
 
     /// Open a context-menu popup when the window is right-clicked. `popup_flags` are
@@ -144,7 +154,9 @@ impl ImGuiApi {
         } else {
             c.as_ptr()
         };
-        unsafe { sys::igBeginPopupContextWindow(ptr, popup_flags) }
+        let r = unsafe { sys::igBeginPopupContextWindow(ptr, popup_flags) };
+        if r { crate::api::guard::open("popup"); }
+        r
     }
 
     /// Helper that opens a popup when the last item is clicked. `popup_flags` are `POPUP_*`.
@@ -175,14 +187,15 @@ impl ImGuiApi {
     #[func]
     fn begin_tooltip(&self) {
         if is_in_frame() {
-            unsafe { sys::igBeginTooltip() }
+            unsafe { sys::igBeginTooltip() };
+            crate::api::guard::open("tooltip");
         }
     }
 
     /// End the tooltip opened by `begin_tooltip()`.
     #[func]
     fn end_tooltip(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("tooltip") {
             unsafe { sys::igEndTooltip() }
         }
     }

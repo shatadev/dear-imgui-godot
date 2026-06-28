@@ -47,13 +47,15 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&id);
-        unsafe { sys::igBeginTabBar(c.as_ptr(), flags) }
+        let r = unsafe { sys::igBeginTabBar(c.as_ptr(), flags) };
+        if r { crate::api::guard::open("tabbar"); }
+        r
     }
 
     /// End the tab bar opened by `begin_tab_bar()`.
     #[func]
     fn end_tab_bar(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("tabbar") {
             unsafe { sys::igEndTabBar() }
         }
     }
@@ -66,7 +68,9 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&label);
-        unsafe { sys::igBeginTabItem(c.as_ptr(), std::ptr::null_mut(), flags) }
+        let r = unsafe { sys::igBeginTabItem(c.as_ptr(), std::ptr::null_mut(), flags) };
+        if r { crate::api::guard::open("tabitem"); }
+        r
     }
 
     /// Begin a tab item with a close button. Pass the current open state; returns a
@@ -80,13 +84,14 @@ impl ImGuiApi {
         let c = cstr(&label);
         let mut o = open;
         let selected = unsafe { sys::igBeginTabItem(c.as_ptr(), &mut o, flags) };
+        if selected { crate::api::guard::open("tabitem"); }
         vdict! { "selected" => selected, "open" => o }
     }
 
     /// End the tab item opened by `begin_tab_item()`.
     #[func]
     fn end_tab_item(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("tabitem") {
             unsafe { sys::igEndTabItem() }
         }
     }

@@ -38,7 +38,9 @@ impl ImGuiApi {
         if !is_in_frame() {
             return false;
         }
-        unsafe { sys::igBeginDragDropSource(flags) }
+        let r = unsafe { sys::igBeginDragDropSource(flags) };
+        if r { crate::api::guard::open("ddsource"); }
+        r
     }
 
     /// Set the payload carried by the current drag, as a typed string. `payload_type`
@@ -63,7 +65,7 @@ impl ImGuiApi {
     /// End the drag-and-drop source opened by `begin_drag_drop_source()`.
     #[func]
     fn end_drag_drop_source(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("ddsource") {
             unsafe { sys::igEndDragDropSource() }
         }
     }
@@ -75,7 +77,9 @@ impl ImGuiApi {
         if !is_in_frame() {
             return false;
         }
-        unsafe { sys::igBeginDragDropTarget() }
+        let r = unsafe { sys::igBeginDragDropTarget() };
+        if r { crate::api::guard::open("ddtarget"); }
+        r
     }
 
     /// Accept a payload of the given type. Returns the payload string once it is
@@ -102,7 +106,7 @@ impl ImGuiApi {
     /// End the drag-and-drop target opened by `begin_drag_drop_target()`.
     #[func]
     fn end_drag_drop_target(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("ddtarget") {
             unsafe { sys::igEndDragDropTarget() }
         }
     }

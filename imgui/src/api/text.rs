@@ -51,14 +51,15 @@ impl ImGuiApi {
     #[func]
     fn push_text_wrap_pos(&self, wrap_x: f32) {
         if is_in_frame() {
-            unsafe { sys::igPushTextWrapPos(wrap_x) }
+            unsafe { sys::igPushTextWrapPos(wrap_x) };
+            crate::api::guard::open("text_wrap");
         }
     }
 
     /// Pop the wrap position pushed by `push_text_wrap_pos()`.
     #[func]
     fn pop_text_wrap_pos(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("text_wrap") {
             unsafe { sys::igPopTextWrapPos() }
         }
     }

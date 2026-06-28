@@ -56,13 +56,15 @@ impl ImGuiApi {
         }
         let l = cstr(&label);
         let p = cstr(&preview);
-        unsafe { sys::igBeginCombo(l.as_ptr(), p.as_ptr(), flags) }
+        let r = unsafe { sys::igBeginCombo(l.as_ptr(), p.as_ptr(), flags) };
+        if r { crate::api::guard::open("combo"); }
+        r
     }
 
     /// End the combo box opened by `begin_combo()`.
     #[func]
     fn end_combo(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("combo") {
             unsafe { sys::igEndCombo() }
         }
     }
@@ -115,13 +117,15 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&label);
-        unsafe { sys::igBeginListBox(c.as_ptr(), vec2(size.x, size.y)) }
+        let r = unsafe { sys::igBeginListBox(c.as_ptr(), vec2(size.x, size.y)) };
+        if r { crate::api::guard::open("listbox"); }
+        r
     }
 
     /// End the list box opened by `begin_list_box()`.
     #[func]
     fn end_list_box(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("listbox") {
             unsafe { sys::igEndListBox() }
         }
     }

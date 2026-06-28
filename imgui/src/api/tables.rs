@@ -137,15 +137,17 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&id);
-        unsafe {
+        let r = unsafe {
             sys::igBeginTable(c.as_ptr(), columns, flags, vec2(outer_size.x, outer_size.y), inner_width)
-        }
+        };
+        if r { crate::api::guard::open("table"); }
+        r
     }
 
     /// End the table opened by `begin_table()`.
     #[func]
     fn end_table(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("table") {
             unsafe { sys::igEndTable() }
         }
     }

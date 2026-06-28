@@ -12,6 +12,7 @@ mod buttons;
 mod color;
 mod draw;
 mod dragdrop;
+pub(crate) mod guard;
 mod images;
 mod inputs;
 mod layout;
@@ -124,13 +125,15 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&name);
-        unsafe { sys::igBegin(c.as_ptr(), std::ptr::null_mut(), 0) }
+        let r = unsafe { sys::igBegin(c.as_ptr(), std::ptr::null_mut(), 0) };
+        crate::api::guard::open("window");
+        r
     }
 
     /// End the window opened by `begin()`.
     #[func]
     fn end(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("window") {
             unsafe { sys::igEnd() }
         }
     }
@@ -144,13 +147,15 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&id);
-        unsafe { sys::igBeginChild_Str(c.as_ptr(), vec2(width, height), false, 0) }
+        let r = unsafe { sys::igBeginChild_Str(c.as_ptr(), vec2(width, height), false, 0) };
+        crate::api::guard::open("child");
+        r
     }
 
     /// End the child region opened by `begin_child()`.
     #[func]
     fn end_child(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("child") {
             unsafe { sys::igEndChild() }
         }
     }
@@ -319,13 +324,15 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&label);
-        unsafe { sys::igTreeNode_Str(c.as_ptr()) }
+        let r = unsafe { sys::igTreeNode_Str(c.as_ptr()) };
+        if r { crate::api::guard::open("tree"); }
+        r
     }
 
     /// Close the tree node opened by `tree_node()`.
     #[func]
     fn tree_pop(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("tree") {
             unsafe { sys::igTreePop() }
         }
     }
@@ -348,13 +355,15 @@ impl ImGuiApi {
         if !is_in_frame() {
             return false;
         }
-        unsafe { sys::igBeginMenuBar() }
+        let r = unsafe { sys::igBeginMenuBar() };
+        if r { crate::api::guard::open("menubar"); }
+        r
     }
 
     /// End the menu bar opened by `begin_menu_bar()`.
     #[func]
     fn end_menu_bar(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("menubar") {
             unsafe { sys::igEndMenuBar() }
         }
     }
@@ -366,13 +375,15 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&label);
-        unsafe { sys::igBeginMenu(c.as_ptr(), true) }
+        let r = unsafe { sys::igBeginMenu(c.as_ptr(), true) };
+        if r { crate::api::guard::open("menu"); }
+        r
     }
 
     /// End the menu opened by `begin_menu()`.
     #[func]
     fn end_menu(&self) {
-        if is_in_frame() {
+        if is_in_frame() && crate::api::guard::close("menu") {
             unsafe { sys::igEndMenu() }
         }
     }

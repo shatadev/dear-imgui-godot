@@ -62,7 +62,9 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&name);
-        unsafe { sys::igBegin(c.as_ptr(), std::ptr::null_mut(), flags) }
+        let r = unsafe { sys::igBegin(c.as_ptr(), std::ptr::null_mut(), flags) };
+        crate::api::guard::open("window");
+        r
     }
 
     /// Begin a scrolling child region with a border toggle and window flags.
@@ -74,7 +76,9 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&id);
-        unsafe { sys::igBeginChild_Str(c.as_ptr(), vec2(width, height), border, flags) }
+        let r = unsafe { sys::igBeginChild_Str(c.as_ptr(), vec2(width, height), border, flags) };
+        crate::api::guard::open("child");
+        r
     }
 
     /// Constrain the size of the next window to the range `min` to `max`, in pixels.

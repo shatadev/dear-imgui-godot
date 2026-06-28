@@ -43,7 +43,9 @@ impl ImGuiApi {
             return false;
         }
         let c = cstr(&label);
-        unsafe { sys::igTreeNodeEx_Str(c.as_ptr(), flags) }
+        let r = unsafe { sys::igTreeNodeEx_Str(c.as_ptr(), flags) };
+        if r { crate::api::guard::open("tree"); }
+        r
     }
 
     /// Set the open state of the next tree node or collapsing header. `cond` is a `COND_*` constant.

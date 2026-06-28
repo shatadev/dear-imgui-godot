@@ -144,6 +144,7 @@ impl INode for ImGuiController {
         CURRENT_UI.with(|c| c.set(ui_ptr));
         let tex_ptr: *mut TextureRegistry = &mut self.textures;
         CURRENT_TEXTURES.with(|c| c.set(tex_ptr));
+        crate::api::guard::reset();
 
         if let Some(mut parent) = self.base().get_parent() {
             parent.emit_signal("imgui_layout", &[]);
