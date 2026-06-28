@@ -15,6 +15,22 @@ pub(crate) fn reset() {
     COUNTS.with(|c| c.borrow_mut().clear());
 }
 
+/// Report any scope/stack left open at the end of the frame (a missing `end*`/`pop*`).
+/// Dear ImGui's end-of-frame recovery then auto-closes them, so this is the readable
+/// counterpart for the forgotten-close case.
+pub(crate) fn report_leftovers() {
+    COUNTS.with(|c| {
+        for (kind, n) in c.borrow().iter() {
+            if *n > 0 {
+                godot_error!(
+                    "dear-imgui-godot: {n} `{kind}` scope(s) were opened but never closed this \
+                     frame; auto-closing to avoid a crash. Add the matching end/pop."
+                );
+            }
+        }
+    });
+}
+
 pub(crate) fn open(kind: &'static str) {
     COUNTS.with(|c| *c.borrow_mut().entry(kind).or_insert(0) += 1);
 }

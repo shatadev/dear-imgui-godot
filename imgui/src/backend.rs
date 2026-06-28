@@ -17,24 +17,6 @@ thread_local! {
     static CURRENT_TEXTURES: Cell<*mut TextureRegistry> = const { Cell::new(std::ptr::null_mut()) };
 }
 
-extern "C" {
-    fn dimgui_recover_log(user_data: *mut std::ffi::c_void, fmt: *const std::ffi::c_char, ...);
-}
-
-
-#[no_mangle]
-unsafe extern "C" fn dimgui_recover_report(msg: *const std::ffi::c_char) {
-    if msg.is_null() {
-        return;
-    }
-    let s = std::ffi::CStr::from_ptr(msg).to_string_lossy();
-    godot_error!(
-        "dear-imgui-godot: recovered from a structural error (an ImGui scope was opened but not \
-         closed): {}",
-        s.trim_end()
-    );
-}
-
 /// Register a Godot texture for use with the image widgets, returning its id.
 ///
 /// Only valid during the `imgui_layout` signal, when the active controller exposes
@@ -153,11 +135,11 @@ impl INode for ImGuiController {
         CURRENT_TEXTURES.with(|c| c.set(std::ptr::null_mut()));
         CURRENT_UI.with(|c| c.set(std::ptr::null_mut()));
 
-        // Recover from forgotten end*/pop* calls (begin/child/table/tab/popup/menu/group left open,
-        // unbalanced id/style/color stacks, etc) and report each as a readable error, rather than letting
-        // Dear ImGui's IM_ASSERT abort the process at EndFrame, which would crash the session.
+        // Report any scope/stack left open this frame (a missing end/pop), then let Dear ImGui's
+        // end-of-frame recovery silently auto-close them, instead of IM_ASSERT aborting at EndFrame.
+        crate::api::guard::report_leftovers();
         unsafe {
-            imgui::sys::igErrorCheckEndFrameRecover(Some(dimgui_recover_log), std::ptr::null_mut());
+            imgui::sys::igErrorCheckEndFrameRecover(None, std::ptr::null_mut());
         }
 
         let draw_data = self.ctx.as_mut().unwrap().render();
