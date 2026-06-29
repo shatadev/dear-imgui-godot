@@ -1,7 +1,7 @@
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use godot::classes::{FileAccess, INode, InputEvent, Node, Texture2D};
+use godot::classes::{DirAccess, FileAccess, INode, InputEvent, Node, Texture2D};
 use godot::prelude::*;
 
 use imgui::{BackendFlags, ConfigFlags, Context};
@@ -11,6 +11,12 @@ use crate::input;
 use crate::renderer::CanvasRenderer;
 
 static CONTROLLER_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+static RESET_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+pub(crate) fn request_reset_layout() {
+    RESET_REQUESTED.store(true, Ordering::Relaxed);
+}
 
 thread_local! {
     static CURRENT_UI: Cell<*mut imgui::Ui> = const { Cell::new(std::ptr::null_mut()) };
@@ -74,6 +80,20 @@ fn save_ini(data: &str) -> bool {
     true
 }
 
+fn delete_ini() {
+    let _ = DirAccess::remove_absolute(INI_PATH);
+}
+
+fn new_context() -> Context {
+    let mut ctx = Context::create();
+    ctx.io_mut().config_flags.insert(ConfigFlags::DOCKING_ENABLE);
+    ctx.io_mut()
+        .backend_flags
+        .insert(BackendFlags::RENDERER_HAS_VTX_OFFSET);
+    ctx.set_ini_filename(Option::<std::path::PathBuf>::None);
+    ctx
+}
+
 #[derive(GodotClass)]
 #[class(base=Node)]
 pub struct ImGuiController {
@@ -112,19 +132,10 @@ impl INode for ImGuiController {
             .get_viewport_rid();
         self.renderer.init(vp_rid);
 
-        let mut ctx = Context::create();
-        ctx.io_mut().config_flags.insert(ConfigFlags::DOCKING_ENABLE);
-        ctx.io_mut()
-            .backend_flags
-            .insert(BackendFlags::RENDERER_HAS_VTX_OFFSET);
-
-        // Drive imgui.ini ourselves through Godot's FileAccess (see INI_PATH)
-        // rather than imgui's native file access
-        ctx.set_ini_filename(Option::<std::path::PathBuf>::None);
+        let mut ctx = new_context();
         if let Some(text) = load_ini() {
             ctx.load_ini_settings(&text);
         }
-
         fonts::build_font_atlas(&mut ctx, &mut self.textures);
         self.ctx = Some(ctx);
 
@@ -146,6 +157,16 @@ impl INode for ImGuiController {
     fn process(&mut self, delta: f64) {
         if self.ctx.is_none() {
             return;
+        }
+
+        // Handle a reset request between frames: delete the saved file and rebuild
+        // the context so every window falls back to its default layout immediately
+        if RESET_REQUESTED.swap(false, Ordering::Relaxed) {
+            delete_ini();
+            self.ctx = None;
+            let mut ctx = new_context();
+            fonts::build_font_atlas(&mut ctx, &mut self.textures);
+            self.ctx = Some(ctx);
         }
 
         let viewport = self.base().get_viewport().expect("viewport");

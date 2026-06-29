@@ -98,6 +98,14 @@ impl ImGuiApi {
         }
     }
 
+    /// Reset the stored window layout. Deletes the saved layout file and returns
+    /// every window to its default position and size on the next frame. Wire this
+    /// to a "reset layout" button so users can recover from a broken arrangement.
+    #[func]
+    fn reset_layout(&self) {
+        crate::backend::request_reset_layout();
+    }
+
     /// Return the Dear ImGui library version string.
     #[func]
     fn get_version(&self) -> GString {
