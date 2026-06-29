@@ -1,7 +1,7 @@
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use godot::classes::{INode, InputEvent, Node, Texture2D};
+use godot::classes::{INode, InputEvent, Node, Os, ProjectSettings, Texture2D};
 use godot::prelude::*;
 
 use imgui::{BackendFlags, ConfigFlags, Context};
@@ -93,6 +93,13 @@ impl INode for ImGuiController {
         ctx.io_mut()
             .backend_flags
             .insert(BackendFlags::RENDERER_HAS_VTX_OFFSET);
+
+        // Store in user dir instead of executable root
+        if Os::singleton().has_feature("web") {
+            let path = ProjectSettings::singleton().globalize_path("user://imgui.ini");
+            ctx.set_ini_filename(Some(std::path::PathBuf::from(path.to_string())));
+        }
+
         fonts::build_font_atlas(&mut ctx, &mut self.textures);
         self.ctx = Some(ctx);
 
