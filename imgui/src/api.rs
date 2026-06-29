@@ -54,6 +54,13 @@ fn color_of(v: sys::ImVec4) -> Color {
     Color::from_rgba(v.x, v.y, v.z, v.w)
 }
 
+/// True when the current ImGui window is a child region, which means a
+/// `begin_child()` was left open (its `end_child()` was forgotten).
+unsafe fn current_window_is_child() -> bool {
+    let w = sys::igGetCurrentWindow();
+    !w.is_null() && ((*w).Flags as i32 & sys::ImGuiWindowFlags_ChildWindow as i32) != 0
+}
+
 /// Dear ImGui for GDScript, available as the `ImGui` autoload.
 ///
 /// Connect a handler to the `imgui_layout` signal and issue your widget calls
@@ -135,6 +142,10 @@ impl ImGuiApi {
     fn end(&self) {
         if is_in_frame() && crate::api::guard::close("window") {
             unsafe {
+                while current_window_is_child() {
+                    sys::igErrorCheckEndWindowRecover(None, std::ptr::null_mut());
+                    sys::igEndChild();
+                }
                 sys::igErrorCheckEndWindowRecover(None, std::ptr::null_mut());
                 sys::igEnd();
             }
