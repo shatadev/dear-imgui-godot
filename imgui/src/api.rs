@@ -134,7 +134,10 @@ impl ImGuiApi {
     #[func]
     fn end(&self) {
         if is_in_frame() && crate::api::guard::close("window") {
-            unsafe { sys::igEnd() }
+            unsafe {
+                sys::igErrorCheckEndWindowRecover(None, std::ptr::null_mut());
+                sys::igEnd();
+            }
         }
     }
 
@@ -156,7 +159,10 @@ impl ImGuiApi {
     #[func]
     fn end_child(&self) {
         if is_in_frame() && crate::api::guard::close("child") {
-            unsafe { sys::igEndChild() }
+            unsafe {
+                sys::igErrorCheckEndWindowRecover(None, std::ptr::null_mut());
+                sys::igEndChild();
+            }
         }
     }
 
