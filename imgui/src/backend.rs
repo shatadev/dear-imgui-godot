@@ -1,7 +1,7 @@
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use godot::classes::{INode, InputEvent, Node, Os, ProjectSettings, Texture2D};
+use godot::classes::{FileAccess, INode, InputEvent, Node, Texture2D};
 use godot::prelude::*;
 
 use imgui::{BackendFlags, ConfigFlags, Context};
@@ -50,6 +50,30 @@ pub(crate) fn is_in_frame() -> bool {
     CURRENT_UI.with(|c| !c.get().is_null())
 }
 
+/// Per-project, persistent location for the layout file. Read and written through
+/// Godot's FileAccess rather than Dear ImGui's own file calls, so it is flushed to
+/// persistent storage on every platform, including web
+const INI_PATH: &str = "user://imgui.ini";
+
+fn load_ini() -> Option<String> {
+    use godot::classes::file_access::ModeFlags;
+    if !FileAccess::file_exists(INI_PATH) {
+        return None;
+    }
+    let f = FileAccess::open(INI_PATH, ModeFlags::READ)?;
+    Some(f.get_as_text().to_string())
+}
+
+fn save_ini(data: &str) -> bool {
+    use godot::classes::file_access::ModeFlags;
+    let Some(mut f) = FileAccess::open(INI_PATH, ModeFlags::WRITE) else {
+        return false;
+    };
+    f.store_string(data);
+    f.close();
+    true
+}
+
 #[derive(GodotClass)]
 #[class(base=Node)]
 pub struct ImGuiController {
@@ -94,10 +118,11 @@ impl INode for ImGuiController {
             .backend_flags
             .insert(BackendFlags::RENDERER_HAS_VTX_OFFSET);
 
-        // Store in user dir instead of executable root
-        if Os::singleton().has_feature("web") {
-            let path = ProjectSettings::singleton().globalize_path("user://imgui.ini");
-            ctx.set_ini_filename(Some(std::path::PathBuf::from(path.to_string())));
+        // Drive imgui.ini ourselves through Godot's FileAccess (see INI_PATH)
+        // rather than imgui's native file access
+        ctx.set_ini_filename(Option::<std::path::PathBuf>::None);
+        if let Some(text) = load_ini() {
+            ctx.load_ini_settings(&text);
         }
 
         fonts::build_font_atlas(&mut ctx, &mut self.textures);
@@ -109,6 +134,11 @@ impl INode for ImGuiController {
 
     fn exit_tree(&mut self) {
         if !self.passive {
+            if let Some(ctx) = self.ctx.as_mut() {
+                let mut buf = String::new();
+                ctx.save_ini_settings(&mut buf);
+                save_ini(&buf);
+            }
             CONTROLLER_ACTIVE.store(false, Ordering::SeqCst);
         }
     }
@@ -151,6 +181,15 @@ impl INode for ImGuiController {
 
         let draw_data = self.ctx.as_mut().unwrap().render();
         self.renderer.render(draw_data, &self.textures);
+
+        let ctx = self.ctx.as_mut().unwrap();
+        if ctx.io().want_save_ini_settings {
+            let mut buf = String::new();
+            ctx.save_ini_settings(&mut buf);
+            if save_ini(&buf) {
+                ctx.io_mut().want_save_ini_settings = false;
+            }
+        }
     }
 
     fn input(&mut self, event: Gd<InputEvent>) {
