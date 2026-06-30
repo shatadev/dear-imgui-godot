@@ -448,6 +448,9 @@ impl ImGuiApi {
 
     /// Create a full-viewport dockspace so windows can dock to the screen edges.
     ///
+    /// The central area is left transparent, so the Godot scene behind the
+    /// dockspace stays visible until a window is docked into it.
+    ///
     /// Call once per frame. Requires docking, which is enabled by default.
     #[func]
     fn dockspace_over_main_viewport(&self) {
@@ -455,7 +458,7 @@ impl ImGuiApi {
             unsafe {
                 sys::igDockSpaceOverViewport(
                     sys::igGetMainViewport() as *const _,
-                    0,
+                    sys::ImGuiDockNodeFlags_PassthruCentralNode as i32,
                     std::ptr::null(),
                 );
             }
