@@ -54,11 +54,21 @@ fn color_of(v: sys::ImVec4) -> Color {
     Color::from_rgba(v.x, v.y, v.z, v.w)
 }
 
-/// True when the current ImGui window is a child region, which means a
+/// True when the current ImGui window is a leftover child region, meaning a
 /// `begin_child()` was left open (its `end_child()` was forgotten).
+///
+/// Docked windows and dock hosts also carry the `ChildWindow` flag, but
+/// they are closed with `igEnd()`, not `igEndChild()`. Excluding them keeps the
+/// recovery loop in `end()` from popping a docked window as if it were a child
 unsafe fn current_window_is_child() -> bool {
     let w = sys::igGetCurrentWindow();
-    !w.is_null() && ((*w).Flags as i32 & sys::ImGuiWindowFlags_ChildWindow as i32) != 0
+    if w.is_null() {
+        return false;
+    }
+    let flags = (*w).Flags as i32;
+    let is_child = flags & sys::ImGuiWindowFlags_ChildWindow as i32 != 0;
+    let is_dock_host = flags & sys::ImGuiWindowFlags_DockNodeHost as i32 != 0;
+    is_child && !is_dock_host && !(*w).DockIsActive()
 }
 
 /// Dear ImGui for GDScript, available as the `ImGui` autoload.
