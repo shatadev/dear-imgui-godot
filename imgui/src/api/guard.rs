@@ -23,7 +23,7 @@ thread_local! {
 fn is_nesting(kind: &str) -> bool {
     !matches!(
         kind,
-        "style_var" | "style_color" | "id" | "item_width" | "text_wrap" | "button_repeat"
+        "style_var" | "style_color" | "id" | "item_width" | "text_wrap" | "button_repeat" | "font"
     )
 }
 
@@ -52,6 +52,7 @@ fn noun(kind: &str) -> &'static str {
         "item_width" => "item width",
         "text_wrap" => "text-wrap position",
         "button_repeat" => "button-repeat",
+        "font" => "font",
         _ => "scope",
     }
 }
@@ -95,6 +96,7 @@ fn close_fn(kind: &str) -> &'static str {
         "item_width" => "pop_item_width()",
         "text_wrap" => "pop_text_wrap_pos()",
         "button_repeat" => "pop_button_repeat()",
+        "font" => "pop_font()",
         _ => "its matching end/pop",
     }
 }
