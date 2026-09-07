@@ -266,6 +266,14 @@ impl INode for ImGuiController {
             self.ctx = Some(ctx);
         }
 
+        // Rebuild the atlas when fonts were queued since the last frame, so custom
+        // fonts are baked in before this frame's layout runs.
+        if fonts::take_dirty() {
+            let ctx = self.ctx.as_mut().unwrap();
+            self.font_tex_id =
+                fonts::build_font_atlas(ctx, &mut self.textures, self.baked_scale, self.font_tex_id);
+        }
+
         self.renderer.sync_layer(desired_render_layer());
 
         let scale = applied_scale();

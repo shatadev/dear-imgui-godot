@@ -13,6 +13,7 @@ mod color;
 mod dispatch;
 mod draw;
 mod dragdrop;
+mod fonts;
 pub(crate) mod guard;
 mod images;
 mod inputs;
