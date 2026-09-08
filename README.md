@@ -51,7 +51,7 @@ Most are already familiar with [pkdawon's imgui-godot](https://github.com/pkdaws
 
 - Editor: Godot 4.3+
 - Language: GDScript, C#, Rust
-- Platform: Windows, Linux, macOS, Web
+- Platform: Windows, Linux, macOS, Web, Android
 
 # Installation
 > [!IMPORTANT]
@@ -171,6 +171,17 @@ make all
 ```
 
 No Godot binary is needed at build time. The crate uses gdext's bundled `api-4-3`.
+
+## Android
+
+Building the Android libraries needs the [Android NDK](https://developer.android.com/ndk) (r27+ recommended, for 16 KB page sizes) and [`cargo-ndk`](https://github.com/bbqsrc/cargo-ndk). Point `ANDROID_NDK_HOME` at your NDK, then:
+
+```sh
+cd imgui
+make android
+```
+
+This cross-compiles the release library for every Godot Android ABI (`arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`) into `addons/dear-imgui-godot/target/android/<abi>/`. `make android` installs `cargo-ndk` and the Rust Android targets on first run. Godot picks the matching ABI automatically when exporting.
 
 # TODO
 
