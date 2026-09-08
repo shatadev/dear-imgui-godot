@@ -5,7 +5,7 @@ use godot::classes::image::Format;
 use godot::classes::{Image, ImageTexture, Texture2D};
 use godot::prelude::*;
 
-use imgui::{sys, Context, FontConfig, FontSource, TextureId};
+use imgui::{sys, Context, FontConfig, FontGlyphRanges, FontSource, TextureId};
 
 pub struct TextureRegistry {
     map: HashMap<usize, Gd<Texture2D>>,
@@ -36,13 +36,24 @@ impl TextureRegistry {
     }
 }
 
+/// An icon font merged into a base font, the way Dear ImGui merges e.g. Font Awesome
+/// with `MergeMode`. `glyph_ranges` is a zero-terminated list of inclusive codepoint
+/// pairs; it must outlive the atlas build, so it is owned here alongside the entry.
+struct MergeFont {
+    data: Vec<u8>,
+    size_pixels: f32,
+    glyph_ranges: Vec<u32>,
+}
+
 /// A custom TTF/OTF font queued by `add_font_from_file`, baked into the atlas on
 /// every rebuild. `ptr` is the live `ImFont` for the current atlas, refreshed each
-/// time it is rebuilt, and used by `push_font`.
+/// time it is rebuilt, and used by `push_font`. `merges` are icon fonts folded into
+/// this font so a single `push_font` yields both text and icons.
 struct FontEntry {
     handle: i64,
     data: Vec<u8>,
     size_pixels: f32,
+    merges: Vec<MergeFont>,
     ptr: *mut sys::ImFont,
 }
 
@@ -65,11 +76,34 @@ pub(crate) fn queue_font(data: Vec<u8>, size_pixels: f32) -> i64 {
             handle,
             data,
             size_pixels,
+            merges: Vec::new(),
             ptr: std::ptr::null_mut(),
         })
     });
     DIRTY.with(|d| d.set(true));
     handle
+}
+
+/// Merge an icon font (raw bytes, logical pixel size, and an inclusive codepoint
+/// range) into the base font identified by `base`, mirroring Dear ImGui's `MergeMode`.
+/// Returns `false` if the base handle is unknown. The atlas is rebuilt on the next frame.
+pub(crate) fn queue_merge(base: i64, data: Vec<u8>, size_pixels: f32, glyph_min: u32, glyph_max: u32) -> bool {
+    let merged = ENTRIES.with(|e| {
+        let mut entries = e.borrow_mut();
+        let Some(entry) = entries.iter_mut().find(|f| f.handle == base) else {
+            return false;
+        };
+        entry.merges.push(MergeFont {
+            data,
+            size_pixels,
+            glyph_ranges: vec![glyph_min, glyph_max, 0],
+        });
+        true
+    });
+    if merged {
+        DIRTY.with(|d| d.set(true));
+    }
+    merged
 }
 
 /// True (clearing the flag) when fonts were queued since the last check and the atlas
@@ -116,11 +150,24 @@ pub fn build_font_atlas(
     // pointer so `push_font` can select it this atlas.
     ENTRIES.with(|e| {
         for entry in e.borrow_mut().iter_mut() {
-            let id = atlas.add_font(&[FontSource::TtfData {
+            let mut sources = vec![FontSource::TtfData {
                 data: &entry.data,
                 size_pixels: entry.size_pixels * scale,
                 config: None,
-            }]);
+            }];
+            // Tail sources merge into the head, so icon glyphs land in the base font.
+            for m in &entry.merges {
+                sources.push(FontSource::TtfData {
+                    data: &m.data,
+                    size_pixels: m.size_pixels * scale,
+                    config: Some(FontConfig {
+                        pixel_snap_h: true,
+                        glyph_ranges: unsafe { FontGlyphRanges::from_ptr(m.glyph_ranges.as_ptr()) },
+                        ..Default::default()
+                    }),
+                });
+            }
+            let id = atlas.add_font(&sources);
             entry.ptr = atlas
                 .get_font(id)
                 .map(|f| f as *const _ as *mut sys::ImFont)
