@@ -1,6 +1,15 @@
 CRATE_NAME := dear_imgui_godot
 TARGET_DIR := ../addons/dear-imgui-godot/target
 WASM_DIR := $(TARGET_DIR)/wasm32-unknown-emscripten
+ANDROID_DIR := $(TARGET_DIR)/android
+
+# Android: cargo-ndk fans out one build per ABI, pointing rustc AND the cc crate (which
+# compiles Dear ImGui + cimgui) at the NDK toolchain. It writes $(ANDROID_DIR)/<abi>/lib*.so
+# using the jniLibs ABI names the .gdextension references. Requires the NDK (ANDROID_NDK_HOME).
+ANDROID_ABIS := arm64-v8a armeabi-v7a x86_64 x86
+ANDROID_TARGETS := aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+# minSdk floor; the libraries stay compatible with this API level and newer. Matches Godot 4.3+.
+ANDROID_API := 21
 
 # Pinned toolchain — single source of truth. Bump deliberately, not via `rustup update`.
 # Latest stable for: EH default (panic=abort path), the --export=__heap_base requirement,
@@ -35,7 +44,7 @@ CARGO_WASM := cargo +$(NIGHTLY)
 WASM_ARGS := -Zbuild-std=std,panic_abort --target wasm32-unknown-emscripten
 
 .PHONY: all ensure-toolchain native native-editor native-release native-debug \
-        wasm wasm-release wasm-variant clean
+        wasm wasm-release wasm-variant android ensure-android clean
 
 all: native wasm-release
 
@@ -73,6 +82,19 @@ wasm-variant:
 	CFLAGS_wasm32_unknown_emscripten="$(WASM_CC_NOTHREADS)" \
 	CXXFLAGS_wasm32_unknown_emscripten="$(WASM_CC_NOTHREADS)" \
 	RUSTFLAGS="$(RUSTFLAGS_NOTHREADS)" $(CARGO_WASM) build $(PROFILE_FLAG) --features nothreads $(WASM_ARGS)
+
+ensure-android:
+	rustup toolchain install $(NIGHTLY) --profile minimal --component rust-src
+	rustup target add $(ANDROID_TARGETS) --toolchain $(NIGHTLY)
+	cargo ndk --version >/dev/null 2>&1 || cargo install cargo-ndk --locked
+
+# Cross-compile the release library for every Android ABI. Both the debug and release
+# .gdextension entries point at these, mirroring the web build. cargo-ndk locates the NDK
+# via ANDROID_NDK_HOME / ANDROID_NDK_ROOT; use NDK r27+ for 16 KB page-size support.
+android: | ensure-android
+	cargo +$(NIGHTLY) ndk -o $(ANDROID_DIR) --platform $(ANDROID_API) \
+	    $(foreach abi,$(ANDROID_ABIS),-t $(abi)) \
+	    build --release
 
 clean:
 	$(CARGO_WASM) clean

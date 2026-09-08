@@ -167,8 +167,45 @@ jobs:
             addons/dear-imgui-godot/target/wasm32-unknown-emscripten/release/dear_imgui_godot.threads.wasm
             addons/dear-imgui-godot/target/wasm32-unknown-emscripten/release/dear_imgui_godot.wasm
 
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-06-19
+          components: rust-src
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: imgui -> ../addons/dear-imgui-godot/target
+          key: android
+
+      # cargo-ndk wires the NDK toolchain into rustc and the cc crate for every ABI.
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Build release (all ABIs)
+        working-directory: imgui
+        # The ubuntu runner ships an NDK (r27+, for 16 KB pages) and exports its path as a
+        # shell env var. It is NOT available via the workflow `${{ env.* }}` context, so read
+        # it at runtime; leaving ANDROID_NDK_HOME empty would break cargo-ndk's detection.
+        run: ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME" make android
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-android
+          if-no-files-found: error
+          path: |
+            addons/dear-imgui-godot/target/android/arm64-v8a/libdear_imgui_godot.so
+            addons/dear-imgui-godot/target/android/armeabi-v7a/libdear_imgui_godot.so
+            addons/dear-imgui-godot/target/android/x86_64/libdear_imgui_godot.so
+            addons/dear-imgui-godot/target/android/x86/libdear_imgui_godot.so
+
   package:
-    needs: [linux, windows, macos, wasm]
+    needs: [linux, windows, macos, wasm, android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -181,12 +218,13 @@ jobs:
         run: |
           set -euo pipefail
           base=addons/dear-imgui-godot/target
-          mkdir -p "$base/editor" "$base/release" "$base/wasm32-unknown-emscripten/release"
+          mkdir -p "$base/editor" "$base/release" "$base/wasm32-unknown-emscripten/release" "$base/android"
           for job in lib-linux-x86_64 lib-windows-x86_64 lib-macos-universal; do
             cp -v "dist/$job/editor/"*  "$base/editor/"
             cp -v "dist/$job/release/"* "$base/release/"
           done
           cp -v dist/lib-wasm/*.wasm "$base/wasm32-unknown-emscripten/release/"
+          cp -rv dist/lib-android/* "$base/android/"
           ls -R "$base"
 
       - name: Stage addon
