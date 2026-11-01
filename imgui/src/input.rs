@@ -123,14 +123,21 @@ fn feed_joy_motion(io: &mut Io, jm: &Gd<InputEventJoypadMotion>) {
 
 /// Feed a bipolar stick axis as a pair of opposing keys. Godot's vertical axes point down, so
 /// `neg` is the up/left key and `pos` is the down/right key.
+///
+/// Below the deadzone the magnitude is forced to zero, not just the pressed flag: ImGui's
+/// stick scrolling reads the stored analog value, and raw motion events carry no deadzone, so a
+/// stick resting at a small drift value would otherwise scroll forever on the last event sent.
 fn feed_joy_axis(io: &mut Io, neg: IKey, pos: IKey, value: f32) {
-    io.add_key_analog_event(neg, value < -JOY_DEADZONE, (-value).clamp(0.0, 1.0));
-    io.add_key_analog_event(pos, value > JOY_DEADZONE, value.clamp(0.0, 1.0));
+    let neg_mag = if value < -JOY_DEADZONE { (-value).clamp(0.0, 1.0) } else { 0.0 };
+    let pos_mag = if value > JOY_DEADZONE { value.clamp(0.0, 1.0) } else { 0.0 };
+    io.add_key_analog_event(neg, neg_mag > 0.0, neg_mag);
+    io.add_key_analog_event(pos, pos_mag > 0.0, pos_mag);
 }
 
-/// Feed a unipolar trigger axis (0..1) as a single key.
+/// Feed a unipolar trigger axis (0..1) as a single key, zeroing the magnitude below the deadzone.
 fn feed_joy_trigger(io: &mut Io, key: IKey, value: f32) {
-    io.add_key_analog_event(key, value > JOY_DEADZONE, value.clamp(0.0, 1.0));
+    let mag = if value > JOY_DEADZONE { value.clamp(0.0, 1.0) } else { 0.0 };
+    io.add_key_analog_event(key, mag > 0.0, mag);
 }
 
 fn map_joy_button(b: JoyButton) -> Option<IKey> {
