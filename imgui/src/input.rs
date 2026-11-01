@@ -1,8 +1,14 @@
-use godot::classes::{InputEvent, InputEventKey, InputEventMouseButton, InputEventMouseMotion};
-use godot::global::{Key as GKey, MouseButton};
+use godot::classes::{
+    InputEvent, InputEventJoypadButton, InputEventJoypadMotion, InputEventKey,
+    InputEventMouseButton, InputEventMouseMotion,
+};
+use godot::global::{JoyAxis, JoyButton, Key as GKey, MouseButton};
 use godot::prelude::*;
 
 use imgui::{Io, Key as IKey, MouseButton as IMouse};
+
+/// Analog inputs below this magnitude are treated as released, to avoid jitter near center.
+const JOY_DEADZONE: f32 = 0.1;
 
 pub fn is_mouse_event(event: &Gd<InputEvent>) -> bool {
     event.clone().try_cast::<InputEventMouseButton>().is_ok()
@@ -13,6 +19,11 @@ pub fn is_keyboard_event(event: &Gd<InputEvent>) -> bool {
     event.clone().try_cast::<InputEventKey>().is_ok()
 }
 
+pub fn is_gamepad_event(event: &Gd<InputEvent>) -> bool {
+    event.clone().try_cast::<InputEventJoypadButton>().is_ok()
+        || event.clone().try_cast::<InputEventJoypadMotion>().is_ok()
+}
+
 pub fn feed_event(io: &mut Io, event: &Gd<InputEvent>) {
     if let Ok(mm) = event.clone().try_cast::<InputEventMouseMotion>() {
         let p = mm.get_position();
@@ -21,6 +32,10 @@ pub fn feed_event(io: &mut Io, event: &Gd<InputEvent>) {
         feed_mouse_button(io, &mb);
     } else if let Ok(k) = event.clone().try_cast::<InputEventKey>() {
         feed_key(io, &k);
+    } else if let Ok(jb) = event.clone().try_cast::<InputEventJoypadButton>() {
+        feed_joy_button(io, &jb);
+    } else if let Ok(jm) = event.clone().try_cast::<InputEventJoypadMotion>() {
+        feed_joy_motion(io, &jm);
     }
 }
 
@@ -76,6 +91,63 @@ fn feed_key(io: &mut Io, k: &Gd<InputEventKey>) {
             }
         }
     }
+}
+
+fn feed_joy_button(io: &mut Io, jb: &Gd<InputEventJoypadButton>) {
+    if let Some(key) = map_joy_button(jb.get_button_index()) {
+        io.add_key_event(key, jb.is_pressed());
+    }
+}
+
+fn feed_joy_motion(io: &mut Io, jm: &Gd<InputEventJoypadMotion>) {
+    let value = jm.get_axis_value();
+    let axis = jm.get_axis();
+    if axis == JoyAxis::LEFT_X {
+        feed_joy_axis(io, IKey::GamepadLStickLeft, IKey::GamepadLStickRight, value);
+    } else if axis == JoyAxis::LEFT_Y {
+        feed_joy_axis(io, IKey::GamepadLStickUp, IKey::GamepadLStickDown, value);
+    } else if axis == JoyAxis::RIGHT_X {
+        feed_joy_axis(io, IKey::GamepadRStickLeft, IKey::GamepadRStickRight, value);
+    } else if axis == JoyAxis::RIGHT_Y {
+        feed_joy_axis(io, IKey::GamepadRStickUp, IKey::GamepadRStickDown, value);
+    } else if axis == JoyAxis::TRIGGER_LEFT {
+        feed_joy_trigger(io, IKey::GamepadL2, value);
+    } else if axis == JoyAxis::TRIGGER_RIGHT {
+        feed_joy_trigger(io, IKey::GamepadR2, value);
+    }
+}
+
+/// Feed a bipolar stick axis as a pair of opposing keys. Godot's vertical axes point down, so
+/// `neg` is the up/left key and `pos` is the down/right key.
+fn feed_joy_axis(io: &mut Io, neg: IKey, pos: IKey, value: f32) {
+    io.add_key_analog_event(neg, value < -JOY_DEADZONE, (-value).clamp(0.0, 1.0));
+    io.add_key_analog_event(pos, value > JOY_DEADZONE, value.clamp(0.0, 1.0));
+}
+
+/// Feed a unipolar trigger axis (0..1) as a single key.
+fn feed_joy_trigger(io: &mut Io, key: IKey, value: f32) {
+    io.add_key_analog_event(key, value > JOY_DEADZONE, value.clamp(0.0, 1.0));
+}
+
+fn map_joy_button(b: JoyButton) -> Option<IKey> {
+    let table: &[(JoyButton, IKey)] = &[
+        (JoyButton::A, IKey::GamepadFaceDown),
+        (JoyButton::B, IKey::GamepadFaceRight),
+        (JoyButton::X, IKey::GamepadFaceLeft),
+        (JoyButton::Y, IKey::GamepadFaceUp),
+        (JoyButton::BACK, IKey::GamepadBack),
+        (JoyButton::START, IKey::GamepadStart),
+        (JoyButton::DPAD_LEFT, IKey::GamepadDpadLeft),
+        (JoyButton::DPAD_RIGHT, IKey::GamepadDpadRight),
+        (JoyButton::DPAD_UP, IKey::GamepadDpadUp),
+        (JoyButton::DPAD_DOWN, IKey::GamepadDpadDown),
+        (JoyButton::LEFT_SHOULDER, IKey::GamepadL1),
+        (JoyButton::RIGHT_SHOULDER, IKey::GamepadR1),
+        (JoyButton::LEFT_STICK, IKey::GamepadL3),
+        (JoyButton::RIGHT_STICK, IKey::GamepadR3),
+    ];
+
+    table.iter().find(|(g, _)| *g == b).map(|&(_, i)| i)
 }
 
 fn map_key(k: GKey) -> Option<IKey> {

@@ -148,8 +148,14 @@ fn new_context() -> Context {
     let mut ctx = Context::create();
     ctx.io_mut().config_flags.insert(ConfigFlags::DOCKING_ENABLE);
     ctx.io_mut()
+        .config_flags
+        .insert(ConfigFlags::NAV_ENABLE_GAMEPAD);
+    ctx.io_mut()
         .backend_flags
         .insert(BackendFlags::RENDERER_HAS_VTX_OFFSET);
+    ctx.io_mut()
+        .backend_flags
+        .insert(BackendFlags::HAS_GAMEPAD);
     ctx.set_ini_filename(Option::<std::path::PathBuf>::None);
     ctx
 }
@@ -355,7 +361,8 @@ impl INode for ImGuiController {
         let io = ctx.io_mut();
         input::feed_event(io, &event);
         let consume = (io.want_capture_mouse && input::is_mouse_event(&event))
-            || (io.want_capture_keyboard && input::is_keyboard_event(&event));
+            || (io.want_capture_keyboard && input::is_keyboard_event(&event))
+            || (io.nav_active && input::is_gamepad_event(&event));
         if consume {
             if let Some(mut vp) = self.base().get_viewport() {
                 vp.set_input_as_handled();
