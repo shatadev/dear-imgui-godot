@@ -5,7 +5,7 @@ use godot::classes::{
 use godot::global::{JoyAxis, JoyButton, Key as GKey, MouseButton};
 use godot::prelude::*;
 
-use imgui::{Io, Key as IKey, MouseButton as IMouse};
+use imgui::{ConfigFlags, Io, Key as IKey, MouseButton as IMouse};
 
 /// Analog inputs below this magnitude are treated as released, to avoid jitter near center.
 const JOY_DEADZONE: f32 = 0.1;
@@ -32,10 +32,14 @@ pub fn feed_event(io: &mut Io, event: &Gd<InputEvent>) {
         feed_mouse_button(io, &mb);
     } else if let Ok(k) = event.clone().try_cast::<InputEventKey>() {
         feed_key(io, &k);
-    } else if let Ok(jb) = event.clone().try_cast::<InputEventJoypadButton>() {
-        feed_joy_button(io, &jb);
-    } else if let Ok(jm) = event.clone().try_cast::<InputEventJoypadMotion>() {
-        feed_joy_motion(io, &jm);
+    } else if io.config_flags.contains(ConfigFlags::NAV_ENABLE_GAMEPAD) {
+        // Only touch the gamepad once the user opts in to nav, so the game keeps full
+        // control of the controller until then.
+        if let Ok(jb) = event.clone().try_cast::<InputEventJoypadButton>() {
+            feed_joy_button(io, &jb);
+        } else if let Ok(jm) = event.clone().try_cast::<InputEventJoypadMotion>() {
+            feed_joy_motion(io, &jm);
+        }
     }
 }
 

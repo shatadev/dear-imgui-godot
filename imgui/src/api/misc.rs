@@ -182,6 +182,38 @@ impl ImGuiApi {
         unsafe { (*sys::igGetIO()).Framerate }
     }
 
+    /// Enable or disable gamepad navigation.
+    ///
+    /// Disabled by default: while off, joypad input is left untouched so the game keeps
+    /// full control of the controller. Enable it (typically once, in `_ready`) to let the
+    /// gamepad drive ImGui windows; while on, joypad events are consumed. Pass `false` to
+    /// hand the gamepad back.
+    #[func]
+    fn set_nav_enable_gamepad(&self, enabled: bool) {
+        if unsafe { sys::igGetCurrentContext() }.is_null() {
+            return;
+        }
+        let flag = sys::ImGuiConfigFlags_NavEnableGamepad as i32;
+        unsafe {
+            let io = &mut *sys::igGetIO();
+            if enabled {
+                io.ConfigFlags |= flag;
+            } else {
+                io.ConfigFlags &= !flag;
+            }
+        }
+    }
+
+    /// Return whether gamepad navigation is currently enabled.
+    #[func]
+    fn get_nav_enable_gamepad(&self) -> bool {
+        if unsafe { sys::igGetCurrentContext() }.is_null() {
+            return false;
+        }
+        let flag = sys::ImGuiConfigFlags_NavEnableGamepad as i32;
+        unsafe { (*sys::igGetIO()).ConfigFlags & flag != 0 }
+    }
+
     /// Return whether the given mouse button (`MOUSE_BUTTON_*`) is held down.
     #[func]
     fn is_mouse_down(&self, button: i32) -> bool {
