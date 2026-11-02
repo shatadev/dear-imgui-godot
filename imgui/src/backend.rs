@@ -1,7 +1,9 @@
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, Ordering};
 
-use godot::classes::{DirAccess, DisplayServer, FileAccess, INode, InputEvent, Node, Texture2D};
+use godot::classes::{
+    DirAccess, DisplayServer, FileAccess, INode, Input, InputEvent, Node, Texture2D,
+};
 use godot::prelude::*;
 
 use imgui::{BackendFlags, ConfigFlags, Context, Style};
@@ -310,6 +312,15 @@ impl INode for ImGuiController {
             io.display_size = [size.x, size.y];
             io.delta_time = (delta as f32).max(1.0e-6);
             io.add_mouse_pos_event([mouse.x, mouse.y]);
+
+            // Advertise a gamepad to ImGui only while one is connected; nav still requires the
+            // user to opt in via ConfigFlags::NAV_ENABLE_GAMEPAD, so the controller is left to
+            // the game until then.
+            if Input::singleton().get_connected_joypads().is_empty() {
+                io.backend_flags.remove(BackendFlags::HAS_GAMEPAD);
+            } else {
+                io.backend_flags.insert(BackendFlags::HAS_GAMEPAD);
+            }
             ctx.new_frame() as *mut imgui::Ui
         };
         CURRENT_UI.with(|c| c.set(ui_ptr));
@@ -354,8 +365,10 @@ impl INode for ImGuiController {
         };
         let io = ctx.io_mut();
         input::feed_event(io, &event);
+        let gamepad_nav = io.config_flags.contains(ConfigFlags::NAV_ENABLE_GAMEPAD);
         let consume = (io.want_capture_mouse && input::is_mouse_event(&event))
-            || (io.want_capture_keyboard && input::is_keyboard_event(&event));
+            || (io.want_capture_keyboard && input::is_keyboard_event(&event))
+            || (gamepad_nav && input::is_gamepad_event(&event));
         if consume {
             if let Some(mut vp) = self.base().get_viewport() {
                 vp.set_input_as_handled();
