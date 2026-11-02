@@ -1,12 +1,12 @@
 use std::ffi::CString;
 use std::os::raw::c_char;
 
-use godot::classes::{INode, Node};
+use godot::classes::{IObject, Object};
 use godot::prelude::*;
 
 use imgui::sys;
 
-use crate::backend::{is_in_frame, ImGuiController};
+use crate::backend::is_in_frame;
 
 mod buttons;
 mod color;
@@ -85,11 +85,13 @@ unsafe fn current_window_is_child() -> bool {
     is_child && !is_dock_host && !(*w).DockIsActive()
 }
 
-/// Dear ImGui for GDScript, available as the `ImGui` autoload.
+/// Dear ImGui for GDScript, available as the `ImGui` engine singleton.
 ///
-/// Connect a handler to the `imgui_layout` signal and issue your widget calls
-/// inside it. Every method below is only valid during that signal (between
-/// ImGui's NewFrame and Render); calls made at any other time are ignored.
+/// The extension registers this as a global singleton (like `Input` or `Time`),
+/// so `ImGui` is always available without any autoload. Connect a handler to the
+/// `imgui_layout` signal and issue your widget calls inside it. Every method below
+/// is only valid during that signal (between ImGui's NewFrame and Render); calls
+/// made at any other time are ignored.
 ///
 /// Immediate-mode widgets carry no retained state: pass the current value in
 /// and use the returned value, e.g. `value = ImGui.slider_float("x", value, 0, 1)`.
@@ -104,20 +106,15 @@ unsafe fn current_window_is_child() -> bool {
 ///     ImGui.end()
 /// ```
 #[derive(GodotClass)]
-#[class(base=Node)]
+#[class(base=Object, rename=ImGui)]
 pub struct ImGuiApi {
-    base: Base<Node>,
+    base: Base<Object>,
 }
 
 #[godot_api]
-impl INode for ImGuiApi {
-    fn init(base: Base<Node>) -> Self {
+impl IObject for ImGuiApi {
+    fn init(base: Base<Object>) -> Self {
         Self { base }
-    }
-
-    fn ready(&mut self) {
-        let driver = ImGuiController::new_alloc();
-        self.base_mut().add_child(&driver);
     }
 }
 
