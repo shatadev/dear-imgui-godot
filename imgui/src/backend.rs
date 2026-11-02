@@ -1,7 +1,9 @@
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, Ordering};
 
-use godot::classes::{DirAccess, DisplayServer, FileAccess, INode, InputEvent, Node, Texture2D};
+use godot::classes::{
+    DirAccess, DisplayServer, Engine, FileAccess, INode, InputEvent, Node, Object, Texture2D,
+};
 use godot::prelude::*;
 
 use imgui::{BackendFlags, ConfigFlags, Context, Style};
@@ -159,6 +161,10 @@ fn new_context() -> Context {
 pub struct ImGuiController {
     base: Base<Node>,
     ctx: Option<Context>,
+    /// The `ImGui` engine singleton the per-frame `imgui_layout` signal is emitted on,
+    /// resolved once in `ready()`. The controller is no longer a child of the API object,
+    /// so it can't reach it through the scene tree.
+    api: Option<Gd<Object>>,
     renderer: CanvasRenderer,
     textures: TextureRegistry,
     passive: bool,
@@ -178,6 +184,7 @@ impl INode for ImGuiController {
         Self {
             base,
             ctx: None,
+            api: None,
             renderer: CanvasRenderer::new(),
             textures: TextureRegistry::new(),
             passive: false,
@@ -196,6 +203,8 @@ impl INode for ImGuiController {
             );
             return;
         }
+
+        self.api = Engine::singleton().get_singleton("ImGui");
 
         let vp_rid = self
             .base()
@@ -317,8 +326,8 @@ impl INode for ImGuiController {
         CURRENT_TEXTURES.with(|c| c.set(tex_ptr));
         crate::api::guard::reset();
 
-        if let Some(mut parent) = self.base().get_parent() {
-            parent.emit_signal("imgui_layout", &[]);
+        if let Some(api) = self.api.as_mut() {
+            api.emit_signal("imgui_layout", &[]);
         }
 
         CURRENT_TEXTURES.with(|c| c.set(std::ptr::null_mut()));

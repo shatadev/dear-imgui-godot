@@ -54,14 +54,15 @@ Most are already familiar with [pkdawon's imgui-godot](https://github.com/pkdaws
 - Platform: Windows, Linux, macOS, Web, Android
 
 # Installation
-> [!IMPORTANT]
-> After installing or updating, restart the editor, and toggle both the plugin and ImGui global on and off in the project settings. It may take a few tries.
 
+> [!IMPORTANT]
+> After updating, restart the editor once so it loads the new native library. **No plugin or ImGui-global toggling is required.** `ImGui` is registered automatically by the extension.
 
 ## 1. Asset Store / AssetLib (Recommended)
+
 - **For Godot 4.7+, you can download the asset from the official Asset Store** https://store.godotengine.org/asset/shatadev/dear-imgui-godot/
 - For Godot 4.6 and below, you can download the asset from the Asset Library
-https://godotengine.org/asset-library/asset/5309
+  https://godotengine.org/asset-library/asset/5309
 
 ## 2. Release Download
 
@@ -69,7 +70,10 @@ Download latest [release](https://github.com/shatadev/dear-imgui-godot/releases)
 
 Copy or extract `dear-imgui-godot/` into your project's `addons/` folder.
 
-Enable **Dear ImGui Godot** in _Project Settings → Plugins_. The plugin registers the `ImGui` global on enable. This autoload **must remain enabled in order for the API to work.** The plugin prints a warning if the autoload or plugin is not enabled.
+The extension registers `ImGui` as an **engine singleton** automatically (like `Input` or `Time`), so the API is always available. There is no autoload to add or keep enabled. Enable **Dear ImGui Godot** in _Project Settings → Plugins_ once: this adds the internal `ImGuiDriver` autoload that renders the overlay in the running game. If the plugin is disabled, `ImGui` calls still resolve but nothing is drawn (a one-time warning is printed; silence it with `imgui/warn_if_disabled = false`).
+
+> [!NOTE]
+> Upgrading from an older version? The plugin automatically removes the obsolete `autoload/ImGui` entry on first launch, since the engine singleton now owns that name.
 
 ## C# setup
 
@@ -88,7 +92,7 @@ Notes:
 
 ## API
 
-`ImGui` is a global Node (`ImGuiApi` class). Build UI inside its per-frame `imgui_layout` signal (emitted from Rust):
+`ImGui` is an engine singleton. Build UI inside its per-frame `imgui_layout` signal (emitted from Rust):
 
 ```gdscript
 func _ready() -> void:

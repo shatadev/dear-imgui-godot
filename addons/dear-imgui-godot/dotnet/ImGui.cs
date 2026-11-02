@@ -1,6 +1,6 @@
 using Godot;
 
-/// <summary>Dear ImGui for C#: a typed static wrapper over the <c>ImGui</c> autoload. Build UI inside a handler connected with <see cref="OnLayout"/>.</summary>
+/// <summary>Dear ImGui for C#: a typed static wrapper over the <c>ImGui</c> engine singleton. Build UI inside a handler connected with <see cref="OnLayout"/>.</summary>
 public static partial class ImGui
 {
     /// <summary>Condition: apply the setting on every call.</summary>
@@ -20,10 +20,10 @@ public static partial class ImGui
         {
             if (_api == null || !GodotObject.IsInstanceValid(_api))
             {
-                _api = ((SceneTree)Engine.GetMainLoop()).Root.GetNodeOrNull("ImGui");
+                _api = Engine.HasSingleton("ImGui") ? Engine.GetSingleton("ImGui") : null;
                 if (_api == null)
-                    GD.PushError("dear-imgui-godot: the \"ImGui\" autoload is missing. " +
-                        "Enable the \"Dear ImGui Godot\" plugin in Project Settings > Plugins.");
+                    GD.PushError("dear-imgui-godot: the \"ImGui\" singleton is missing. " +
+                        "Is the dear-imgui-godot GDExtension installed and loaded?");
             }
             return _api;
         }

@@ -1,11 +1,11 @@
-use godot::classes::{INode, Node};
+use godot::classes::{Engine, INode, Node};
 use godot::prelude::*;
 
 use crate::with_ui;
 
 /// Example node that builds UI in Rust with the full imgui-rs API.
 ///
-/// It connects to the `ImGui` autoload's `imgui_layout` signal and draws a
+/// It connects to the `ImGui` singleton's `imgui_layout` signal and draws a
 /// window inside `with_ui`. Add it to a scene (see `main.tscn`) to see it run.
 #[derive(GodotClass)]
 #[class(base=Node, init)]
@@ -24,7 +24,7 @@ impl INode for ImGuiExample {
 
         let this = self.to_gd();
         let callable = Callable::from_object_method(&this, "on_layout");
-        if let Some(mut imgui) = self.base().get_node_or_null("/root/ImGui") {
+        if let Some(mut imgui) = Engine::singleton().get_singleton("ImGui") {
             imgui.connect("imgui_layout", &callable);
         }
     }
